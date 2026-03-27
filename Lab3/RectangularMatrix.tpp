@@ -4,46 +4,36 @@
 
 // Конструкторы
 template <class T>
-RectangularMatrix<T>::RectangularMatrix(int rows, int cols) : rows_(rows), cols_(cols) {
+RectangularMatrix<T>::RectangularMatrix(int rows, int cols)
+    : rows_(rows), cols_(cols), data_() {
     if (rows <= 0 || cols <= 0)
         throw std::invalid_argument("Matrix dimensions must be positive");
-    data_ = new DynamicArray<T>(rows * cols);
-    for (int i = 0; i < rows * cols; i++) data_->Set(i, T());
+    for (int i = 0; i < rows * cols; i++)
+        data_.Append(T());
 }
 
 template <class T>
-RectangularMatrix<T>::RectangularMatrix(int rows, int cols, T** data) : rows_(rows), cols_(cols) {
+RectangularMatrix<T>::RectangularMatrix(int rows, int cols, T** data)
+    : rows_(rows), cols_(cols), data_() {
     if (rows <= 0 || cols <= 0)
         throw std::invalid_argument("Matrix dimensions must be positive");
-    data_ = new DynamicArray<T>(rows * cols);
     for (int i = 0; i < rows; i++)
         for (int j = 0; j < cols; j++)
-            data_->Set(i * cols + j, data[i][j]);
+            data_.Append(data[i][j]);
 }
 
-template <class T>
-RectangularMatrix<T>::RectangularMatrix(const RectangularMatrix<T>& other) : rows_(other.rows_), cols_(other.cols_) {
-    data_ = new DynamicArray<T>(rows_ * cols_);
-    for (int i = 0; i < rows_ * cols_; i++)
-        data_->Set(i, other.data_->Get(i));
-}
 
-template <class T>
-RectangularMatrix<T>::~RectangularMatrix() { delete data_; }
-
-// ─────────────────────────────────────────────
-// Get / Set / Rows / Cols
-// ─────────────────────────────────────────────
+// Get / Set
 template <class T>
 T RectangularMatrix<T>::Get(int row, int col) const {
     this->CheckIndex(row, col, rows_, cols_);
-    return data_->Get(row * cols_ + col);
+    return data_.Get(row * cols_ + col);
 }
 
 template <class T>
 void RectangularMatrix<T>::Set(int row, int col, T val) {
     this->CheckIndex(row, col, rows_, cols_);
-    data_->Set(row * cols_ + col, val);
+    data_.Set(row * cols_ + col, val);
 }
 
 template <class T>
@@ -52,9 +42,8 @@ int RectangularMatrix<T>::Rows() const { return rows_; }
 template <class T>
 int RectangularMatrix<T>::Cols() const { return cols_; }
 
-// ─────────────────────────────────────────────
+
 // Арифметика
-// ─────────────────────────────────────────────
 template <class T>
 IMatrix<T>* RectangularMatrix<T>::Add(const IMatrix<T>& other) const {
     this->CheckSameSize(other);
@@ -91,15 +80,14 @@ template <class T>
 double RectangularMatrix<T>::Norm() const {
     double sum = 0.0;
     for (int i = 0; i < rows_ * cols_; i++) {
-        double v = (double)data_->Get(i);
+        double v = (double)data_.Get(i);
         sum += v * v;
     }
     return std::sqrt(sum);
 }
 
-// ─────────────────────────────────────────────
+
 // Элементарные преобразования строк
-// ─────────────────────────────────────────────
 template <class T>
 void RectangularMatrix<T>::SwapRows(int i, int j) {
     if (i < 0 || i >= rows_ || j < 0 || j >= rows_)
@@ -122,9 +110,7 @@ void RectangularMatrix<T>::AddRow(int dst, int src, T scalar) {
     for (int j = 0; j < cols_; j++) Set(dst, j, Get(dst, j) + Get(src, j) * scalar);
 }
 
-// ─────────────────────────────────────────────
 // Элементарные преобразования столбцов
-// ─────────────────────────────────────────────
 template <class T>
 void RectangularMatrix<T>::SwapCols(int i, int j) {
     if (i < 0 || i >= cols_ || j < 0 || j >= cols_)
@@ -147,9 +133,7 @@ void RectangularMatrix<T>::AddCol(int dst, int src, T scalar) {
     for (int i = 0; i < rows_; i++) Set(i, dst, Get(i, dst) + Get(i, src) * scalar);
 }
 
-// ─────────────────────────────────────────────
 // Транспонирование
-// ─────────────────────────────────────────────
 template <class T>
 IMatrix<T>* RectangularMatrix<T>::Transpose() const {
     auto* result = new RectangularMatrix<T>(cols_, rows_);

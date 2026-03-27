@@ -92,6 +92,23 @@ void ArraySequence<T>::InsertAtInternal(const T& item, int index) {
 }
 
 
+template <typename T>
+void ArraySequence<T>::SetInternal(int index, const T& value) {
+    if (index < 0 || index >= size_)
+        throw std::out_of_range("Index is out of range");
+    items_.Set(index, value);
+}
+
+template <typename T>
+void ArraySequence<T>::RemoveAtInternal(int index) {
+    if (index < 0 || index >= size_)
+        throw std::out_of_range("Index is out of range");
+    for (int i = index; i < size_ - 1; ++i)
+        items_.Set(i, items_.Get(i + 1));
+    --size_;
+}
+
+
 template <class T>
 Sequence<T>* ArraySequence<T>::Append(const T& item) {
     ArraySequence<T>* instance = GetInstance();
@@ -161,6 +178,16 @@ template <class T>
 MutableArraySequence<T>::MutableArraySequence(const MutableArraySequence<T>& other)
     : ArraySequence<T>(other) {}
 
+template <typename T>
+void MutableArraySequence<T>::Set(int index, const T& value) {
+    this->SetInternal(index, value);
+}
+
+template <typename T>
+void MutableArraySequence<T>::RemoveAt(int index) {
+    this->RemoveAtInternal(index);
+}
+
 template <class T>
 ArraySequence<T>* MutableArraySequence<T>::GetInstance() { return this; }
 
@@ -168,6 +195,7 @@ template <class T>
 ArraySequence<T>* MutableArraySequence<T>::Clone() const {
     return new MutableArraySequence<T>(*this);
 }
+
 
 // ImmutableArraySequence
 

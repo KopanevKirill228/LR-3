@@ -12,14 +12,11 @@ public:
     virtual IMatrix<T>* Add(const IMatrix<T>& other) const = 0;
     virtual IMatrix<T>* MulScalar(T scalar) const = 0;
     virtual IMatrix<T>* MulMatrix(const IMatrix<T>& other) const = 0;
-
-    // Норма Фробениуса
-    virtual double Norm() const = 0;
+    virtual double Norm() const = 0; // Норма Фробениуса
 
     virtual void SwapRows(int i, int j) = 0;
     virtual void MulRow(int i, T scalar) = 0;
     virtual void AddRow(int dst, int src, T scalar) = 0;
-
     virtual void SwapCols(int i, int j) = 0;
     virtual void MulCol(int j, T scalar) = 0;
     virtual void AddCol(int dst, int src, T scalar) = 0;

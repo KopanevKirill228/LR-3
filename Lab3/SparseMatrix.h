@@ -4,12 +4,17 @@
 #include <cmath>
 
 template <class T>
-class RectangularMatrix : public IMatrix<T> {
+struct SparseElement {
+    int row, col;
+    T value;
+};
+
+template <class T>
+class SparseMatrix : public IMatrix<T> {
 public:
-    RectangularMatrix(int rows, int cols);
-    RectangularMatrix(int rows, int cols, T** data);
-    RectangularMatrix(const RectangularMatrix<T>& other) = default;
-    ~RectangularMatrix() override = default;
+    SparseMatrix(int rows, int cols);
+    SparseMatrix(const SparseMatrix<T>& other) = default;
+    ~SparseMatrix() override = default;
 
     T Get(int row, int col) const override;
     void Set(int row, int col, T val) override;
@@ -30,9 +35,14 @@ public:
 
     IMatrix<T>* Transpose() const override;
 
+    // Утилиты для разреженной матрицы
+    int NonZeroCount() const;
+
 private:
     int rows_, cols_;
-    MutableArraySequence<T> data_;
+    MutableArraySequence<SparseElement<T>> data_;
+
+    int FindIndex(int row, int col) const;  // возвращает -1 если не найден
 };
 
-#include "RectangularMatrix.tpp"
+#include "SparseMatrix.tpp"

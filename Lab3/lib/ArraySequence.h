@@ -61,6 +61,8 @@ protected:
     void AppendInternal(const T& item);
     void PrependInternal(const T& item);
     void InsertAtInternal(const T& item, int index);
+    void SetInternal(int index, const T& value);
+    void RemoveAtInternal(int index);
 
 private:
     DynamicArray<T> items_;
@@ -77,6 +79,9 @@ public:
     MutableArraySequence();
     MutableArraySequence(const T* items, int count);
     MutableArraySequence(const MutableArraySequence<T>& other);
+
+    void Set(int index, const T& value);
+    void RemoveAt(int index);
 
     class Builder {
     private:
