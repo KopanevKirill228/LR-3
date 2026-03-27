@@ -35,14 +35,13 @@ public:
 
     IMatrix<T>* Transpose() const override;
 
-    // Утилиты для разреженной матрицы
     int NonZeroCount() const;
 
 private:
     int rows_, cols_;
     MutableArraySequence<SparseElement<T>> data_;
 
-    int FindIndex(int row, int col) const;  // возвращает -1 если не найден
+    int FindIndex(int row, int col) const;
 };
 
 #include "SparseMatrix.tpp"

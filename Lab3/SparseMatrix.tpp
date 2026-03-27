@@ -19,7 +19,6 @@ SparseMatrix<T>::SparseMatrix(int rows, int cols)
 }
 
 // Get / Set / Rows / Cols
-
 template <class T>
 T SparseMatrix<T>::Get(int row, int col) const {
     this->CheckIndex(row, col, rows_, cols_);
@@ -33,19 +32,19 @@ void SparseMatrix<T>::Set(int row, int col, T val) {
     int idx = FindIndex(row, col);
 
     if (val == T()) {
-        // записываем ноль — удаляем элемент если он есть
+        // Записываем ноль — удаляем элемент если он есть
         if (idx != -1)
             data_.RemoveAt(idx);
     }
     else {
         if (idx != -1) {
-            // обновляем существующий
+            // Обновляем существующий
             SparseElement<T> el = data_.Get(idx);
             el.value = val;
             data_.Set(idx, el);
         }
         else {
-            // добавляем новый
+            // Добавляем новый
             data_.Append({ row, col, val });
         }
     }
@@ -74,7 +73,7 @@ IMatrix<T>* SparseMatrix<T>::Add(const IMatrix<T>& other) const {
 template <class T>
 IMatrix<T>* SparseMatrix<T>::MulScalar(T scalar) const {
     auto* result = new SparseMatrix<T>(rows_, cols_);
-    // умножаем только ненулевые
+    // Умножаем только ненулевые
     for (int i = 0; i < data_.GetLength(); i++) {
         auto el = data_.Get(i);
         result->Set(el.row, el.col, el.value * scalar);
@@ -122,7 +121,7 @@ template <class T>
 void SparseMatrix<T>::MulRow(int i, T scalar) {
     if (i < 0 || i >= rows_) throw std::out_of_range("Row index out of range");
     if (scalar == T()) {
-        // умножение на ноль — удаляем все элементы строки
+        // Умножение на ноль — удаляем все элементы строки
         for (int k = data_.GetLength() - 1; k >= 0; k--)
             if (data_.Get(k).row == i)
                 data_.RemoveAt(k);
@@ -187,7 +186,7 @@ void SparseMatrix<T>::AddCol(int dst, int src, T scalar) {
 template <class T>
 IMatrix<T>* SparseMatrix<T>::Transpose() const {
     auto* result = new SparseMatrix<T>(cols_, rows_);
-    // транспонируем только ненулевые
+    // Транспонируем только ненулевые
     for (int i = 0; i < data_.GetLength(); i++) {
         auto el = data_.Get(i);
         result->Set(el.col, el.row, el.value);
