@@ -57,15 +57,14 @@ public:
 
 
 protected:
+    LinkedList<T> items_;
+
     virtual ListSequence<T>* GetInstance() = 0;
     virtual ListSequence<T>* Clone() const = 0;
 
     void AppendInternal(const T& item);
     void PrependInternal(const T& item);
     void InsertAtInternal(const T& item, int index);
-
-private:
-    LinkedList<T> items_;
 };
 
 
@@ -76,6 +75,8 @@ public:
     MutableListSequence(const T* items, int count);
     MutableListSequence(const LinkedList<T>& list);
     MutableListSequence(const MutableListSequence<T>& other);
+
+    void RemoveFirst();
 
     // вложенный Builder
     class Builder {

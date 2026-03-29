@@ -1,7 +1,6 @@
 #pragma once
 #include "IMatrix.h"
 #include "lib/ArraySequence.h"
-#include <cmath>
 
 template <class T>
 class RectangularMatrix : public IMatrix<T> {

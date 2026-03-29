@@ -161,6 +161,17 @@ void LinkedList<T>::InsertAt(const T& item, int index) {
 }
 
 template <class T>
+void LinkedList<T>::PopFront() {
+    if (length_ == 0)
+        throw std::out_of_range("List is empty");
+    Node* old = head_;
+    head_ = head_->next;
+    if (head_ == nullptr) tail_ = nullptr;
+    delete old;
+    --length_;
+}
+
+template <class T>
 LinkedList<T> LinkedList<T>::Concat(const LinkedList<T>& list) const {
     LinkedList<T> result(*this);
     Node* current = list.head_;

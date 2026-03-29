@@ -142,6 +142,11 @@ MutableListSequence<T>::MutableListSequence(const MutableListSequence<T>& other)
     : ListSequence<T>(other) {
 }
 
+template <typename T>
+void MutableListSequence<T>::RemoveFirst() {
+    this->items_.PopFront();
+}
+
 template <class T>
 ListSequence<T>* MutableListSequence<T>::GetInstance() {
     return this;

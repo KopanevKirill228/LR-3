@@ -19,6 +19,8 @@ public:
     void Prepend(const T& item);
     void InsertAt(const T& item, int index);
 
+    void PopFront(); // удалить первый элемент
+
     LinkedList<T> Concat(const LinkedList<T>& list) const;
     LinkedList<T> GetSubList(int startIndex, int endIndex) const;
 
