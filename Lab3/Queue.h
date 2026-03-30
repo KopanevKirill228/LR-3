@@ -28,13 +28,9 @@ public:
     const T& Front() const;
     const T& Back()  const;
 
-    ICollection<T>* Map(std::function<T(const T&)> f) const override;
-    ICollection<T>* Where(std::function<bool(const T&)> predicate) const override;
-    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const override;
-
     ICollection<T>* Concat(const ICollection<T>& other) const override;
-    ICollection<T>* GetSubsequence(size_t startIndex, size_t endIndex) const override;
-    int FindSubsequence(const ICollection<T>& sub) const override;
+
+    const MutableListSequence<T>* GetSequence() const { return &seq_; }
 
 private:
     MutableListSequence<T> seq_;

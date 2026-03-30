@@ -1,86 +1,66 @@
 ﻿#include <iostream>
-#include "SquareMatrix.h"
-#include "DiagonalMatrix.h"
-#include "MatrixOperators.h"
+#include "Stack.h"
+#include "Queue.h"
+#include "lib/MapReduce.h"
 
 int main() {
-    double** data1 = new double* [3];
-    double** data2 = new double* [3];
-    for (int i = 0; i < 3; i++) {
-        data1[i] = new double[3];
-        data2[i] = new double[3];
-        for (int j = 0; j < 3; j++) {
-            data1[i][j] = (i == j) ? 2.0 : 1.0;
-            data2[i][j] = (i == j) ? 3.0 : 0.0;
-        }
-    }
-    SquareMatrix<double> m1(3, data1);
-    SquareMatrix<double> m2(3, data2);
-    for (int i = 0; i < 3; i++) { delete[] data1[i]; delete[] data2[i]; }
-    delete[] data1; delete[] data2;
+    // === Stack ===
+    std::cout << "=== Stack ===" << std::endl;
 
-    // operator<<
-    std::cout << "=== m1 ===" << std::endl;
-    std::cout << m1;
-    std::cout << "=== m2 ===" << std::endl;
-    std::cout << m2;
+    Stack<int> s;
+    s.Push(1); s.Push(2); s.Push(3); s.Push(4); s.Push(5);
 
-    // operator+
-    auto* sum = m1 + m2;
-    std::cout << "=== m1 + m2 ===" << std::endl;
-    std::cout << *sum;
-    delete sum;
+    std::cout << "Stack: ";
+    for (size_t i = 0; i < s.GetCount(); i++) std::cout << s.Get(i) << " ";
+    std::cout << std::endl;
 
-    // operator* scalar правый
-    auto* scaled = m1 * 2.0;
-    std::cout << "=== m1 * 2 ===" << std::endl;
-    std::cout << *scaled;
-    delete scaled;
+    // Map: удвоить
+    auto* mapped = s.GetSequence()->Map([](const int& x) { return x * 2; });
+    std::cout << "Map (*2): ";
+    for (int i = 0; i < mapped->GetLength(); i++) std::cout << mapped->Get(i) << " ";
+    std::cout << std::endl;
+    delete mapped;
 
-    // operator* scalar левый
-    auto* scaled2 = 3.0 * m1;
-    std::cout << "=== 3 * m1 ===" << std::endl;
-    std::cout << *scaled2;
-    delete scaled2;
+    // Where: только чётные
+    auto* filtered = s.GetSequence()->Where([](const int& x) { return x % 2 == 0; });
+    std::cout << "Where (even): ";
+    for (int i = 0; i < filtered->GetLength(); i++) std::cout << filtered->Get(i) << " ";
+    std::cout << std::endl;
+    delete filtered;
 
-    // operator* матрицы
-    auto* product = m1 * m2;
-    std::cout << "=== m1 * m2 ===" << std::endl;
-    std::cout << *product;
-    delete product;
+    // Reduce: сумма
+    int sum = s.GetSequence()->Reduce(
+        [](const int& acc, const int& x) { return acc + x; }, 0);
+    std::cout << "Reduce (sum): " << sum << std::endl;
 
-    // operator== / !=
-    SquareMatrix<double> m3(m1);
-    std::cout << "m1 == m1: " << (m1 == m3 ? "true" : "false") << std::endl;
-    std::cout << "m1 == m2: " << (m1 == m2 ? "true" : "false") << std::endl;
-    std::cout << "m1 != m2: " << (m1 != m2 ? "true" : "false") << std::endl;
+    // === Queue ===
+    std::cout << "\n=== Queue ===" << std::endl;
 
-    // Всё то же самое для DiagonalMatrix — операторы работают через IMatrix
-    double diag1[] = { 1.0, 2.0, 3.0 };
-    double diag2[] = { 4.0, 5.0, 6.0 };
-    DiagonalMatrix<double> d1(3, diag1);
-    DiagonalMatrix<double> d2(3, diag2);
+    Queue<int> q;
+    q.Enqueue(10); q.Enqueue(20); q.Enqueue(30); q.Enqueue(40);
 
-    std::cout << "\n=== d1 ===" << std::endl;
-    std::cout << d1;
+    std::cout << "Queue: ";
+    for (size_t i = 0; i < q.GetCount(); i++) std::cout << q.Get(i) << " ";
+    std::cout << std::endl;
 
-    auto* dsum = d1 + d2;
-    std::cout << "=== d1 + d2 ===" << std::endl;
-    std::cout << *dsum;
-    delete dsum;
+    // Map: x / 10
+    auto* qmapped = q.GetSequence()->Map([](const int& x) { return x / 10; });
+    std::cout << "Map (/10): ";
+    for (int i = 0; i < qmapped->GetLength(); i++) std::cout << qmapped->Get(i) << " ";
+    std::cout << std::endl;
+    delete qmapped;
 
-    auto* dscaled = d1 * 3.0;
-    std::cout << "=== d1 * 3 ===" << std::endl;
-    std::cout << *dscaled;
-    delete dscaled;
+    // Where: > 15
+    auto* qfiltered = q.GetSequence()->Where([](const int& x) { return x > 15; });
+    std::cout << "Where (>15): ";
+    for (int i = 0; i < qfiltered->GetLength(); i++) std::cout << qfiltered->Get(i) << " ";
+    std::cout << std::endl;
+    delete qfiltered;
 
-    auto* dproduct = d1 * d2;
-    std::cout << "=== d1 * d2 ===" << std::endl;
-    std::cout << *dproduct;
-    delete dproduct;
-
-    std::cout << "d1 == d2: " << (d1 == d2 ? "true" : "false") << std::endl;
-    std::cout << "d1 == d1: " << (d1 == d1 ? "true" : "false") << std::endl;
+    // Reduce: произведение
+    int product = q.GetSequence()->Reduce(
+        [](const int& acc, const int& x) { return acc * x; }, 1);
+    std::cout << "Reduce (product): " << product << std::endl;
 
     return 0;
 }

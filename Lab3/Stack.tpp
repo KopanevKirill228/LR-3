@@ -54,61 +54,9 @@ template <typename T>
 const T& Stack<T>::Peek() const { return PeekFront(); }
 
 template <typename T>
-ICollection<T>* Stack<T>::Map(std::function<T(const T&)> f) const {
-    Stack<T>* result = new Stack<T>();
-    for (int i = seq_.GetLength() - 1; i >= 0; --i)
-        result->PushBack(f(seq_.Get(i)));
-    return result;
-}
-
-template <typename T>
-ICollection<T>* Stack<T>::Where(std::function<bool(const T&)> pred) const {
-    Stack<T>* result = new Stack<T>();
-    for (int i = seq_.GetLength() - 1; i >= 0; --i)
-        if (pred(seq_.Get(i)))
-            result->PushBack(seq_.Get(i));
-    return result;
-}
-
-template <typename T>
-T Stack<T>::Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
-    T acc = init;
-    for (int i = seq_.GetLength() - 1; i >= 0; --i)
-        acc = f(seq_.Get(i), acc);
-    return acc;
-}
-
-template <typename T>
 ICollection<T>* Stack<T>::Concat(const ICollection<T>& other) const {
     Stack<T>* result = new Stack<T>(*this);
     for (int i = static_cast<int>(other.GetCount()) - 1; i >= 0; --i)
         result->PushBack(other.Get(static_cast<size_t>(i)));
     return result;
-}
-
-template <typename T>
-ICollection<T>* Stack<T>::GetSubsequence(size_t start, size_t end) const {
-    if (start > end || static_cast<int>(end) >= seq_.GetLength())
-        throw std::out_of_range("Invalid indices");
-    Stack<T>* result = new Stack<T>();
-    for (int i = static_cast<int>(end); i >= static_cast<int>(start); --i)
-        result->PushBack(seq_.Get(i));
-    return result;
-}
-
-template <typename T>
-int Stack<T>::FindSubsequence(const ICollection<T>& sub) const {
-    int n = seq_.GetLength(), m = static_cast<int>(sub.GetCount());
-    if (m == 0) return 0;
-    if (m > n)  return -1;
-    for (int i = 0; i <= n - m; ++i) {
-        bool match = true;
-        for (int j = 0; j < m; ++j)
-            if (!(seq_.Get(i + j) == sub.Get(static_cast<size_t>(j))))
-            {
-                match = false; break;
-            }
-        if (match) return i;
-    }
-    return -1;
 }

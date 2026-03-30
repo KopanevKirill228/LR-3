@@ -4,6 +4,7 @@
 #include "Sequence.h"
 #include "Linked_List.h"
 #include "ienumerator.h"
+#include "MapReduce.h" 
 
 template <class T>
 class ListSequence : public Sequence<T> {
@@ -77,6 +78,20 @@ public:
     MutableListSequence(const MutableListSequence<T>& other);
 
     void RemoveFirst();
+
+    Sequence<T>* Map(std::function<T(const T&)> f) const {
+        return ::Map<T, T>(this, f);
+    }
+
+    Sequence<T>* Where(std::function<bool(const T&)> pred) const {
+        return ::Where<T>(this, pred);
+    }
+
+    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
+        return ::Reduce<T, T>(this, [&](const T& acc, const T& x) {
+            return f(acc, x);
+            }, init);
+    }
 
     // вложенный Builder
     class Builder {
