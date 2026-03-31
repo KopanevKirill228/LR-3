@@ -1,6 +1,5 @@
 #pragma once
 #include "Hanoi.h"
-#include <iostream>
 
 template <typename T>
 Hanoi<T>::Hanoi(Stack<T> source, std::string nameA, std::string nameB, std::string nameC)
@@ -49,7 +48,6 @@ void Hanoi<T>::PrintMoves() const {
         std::cout << "Диск " << m.disk
             << ": " << m.from << " -> " << m.to << "\n";
     }
-    std::cout << "Всего ходов: " << moves_.GetLength() << "\n";
 }
 
 template <typename T>
