@@ -1,5 +1,6 @@
 ﻿#pragma once
-#include"RectangularMatrix.h"
+#include "RectangularMatrix.h"
+#include "cmath"
 
 
 // Конструкторы
