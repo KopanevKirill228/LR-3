@@ -1,27 +1,27 @@
-п»ї#include "Solvers.h"
+#include "Solvers.h"
 #include <iostream>
 #include <iomanip>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <string>
-#include "RectangularMatrix.h"
+#include "SquareMatrix.h"
 #include "lib/ArraySequence.h"
 
 using Clock = std::chrono::high_resolution_clock;
 using Ms = std::chrono::duration<double, std::milli>;
 
-// Р“РµРЅРµСЂР°С†РёСЏ СЃР»СѓС‡Р°Р№РЅРѕР№ РјР°С‚СЂРёС†С‹ [в€’1, 1] СЃ С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹Рј seed
-RectangularMatrix<double> RandomMatrix(int n, unsigned seed = 42) {
+// Генерация случайной матрицы [?1, 1] с фиксированным seed
+SquareMatrix<double> RandomMatrix(int n, unsigned seed = 42) {
     srand(seed);
-    RectangularMatrix<double> A(n, n);
+    SquareMatrix<double> A(n);
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             A.Set(i, j, -1.0 + 2.0 * rand() / RAND_MAX);
     return A;
 }
 
-// Р“РµРЅРµСЂР°С†РёСЏ СЃР»СѓС‡Р°Р№РЅРѕРіРѕ РІРµРєС‚РѕСЂР° [в€’1, 1]
+// Генерация случайного вектора [?1, 1]
 MutableArraySequence<double> RandomVector(int n, unsigned seed = 123) {
     srand(seed);
     MutableArraySequence<double> b;
@@ -30,28 +30,28 @@ MutableArraySequence<double> RandomVector(int n, unsigned seed = 123) {
     return b;
 }
 
-// РњР°С‚СЂРёС†Р° Р“РёР»СЊР±РµСЂС‚Р°: H[i][j] = 1/(i+j+1)
-RectangularMatrix<double> HilbertMatrix(int n) {
-    RectangularMatrix<double> H(n, n);
+// Матрица Гильберта: H[i][j] = 1/(i+j+1)
+SquareMatrix<double> HilbertMatrix(int n) {
+    SquareMatrix<double> H(n);
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             H.Set(i, j, 1.0 / (i + j + 1));
     return H;
 }
 
-// 4.1 РЎСЂР°РІРЅРµРЅРёРµ РІСЂРµРјРµРЅРё СЂРµС€РµРЅРёСЏ РѕРґРЅРѕР№ СЃРёСЃС‚РµРјС‹
+// 4.1 Сравнение времени решения одной системы
 void Experiment_4_1() {
     std::cout << "\n========================================\n";
-    std::cout << "4.1 РЎСЂР°РІРЅРµРЅРёРµ РІСЂРµРјРµРЅРё (РѕРґРЅР° СЃРёСЃС‚РµРјР°)\n";
+    std::cout << "4.1 Сравнение времени (одна система)\n";
     std::cout << "========================================\n\n";
 
     std::cout << std::left
         << std::setw(6) << "n"
-        << std::setw(18) << "Р“Р°СѓСЃСЃ (Р±РµР· РІС‹Р±.)"
-        << std::setw(18) << "Р“Р°СѓСЃСЃ (СЃ РІС‹Р±.)"
-        << std::setw(18) << "LU (СЂР°Р·Р»РѕР¶РµРЅРёРµ)"
-        << std::setw(18) << "LU (РїРѕРґСЃС‚Р°РЅРѕРІРєР°)"
-        << std::setw(18) << "LU (РёС‚РѕРіРѕ)"
+        << std::setw(18) << "Гаусс (без выб.)"
+        << std::setw(18) << "Гаусс (с выб.)"
+        << std::setw(18) << "LU (разложение)"
+        << std::setw(18) << "LU (подстановка)"
+        << std::setw(18) << "LU (итого)"
         << "\n";
     std::cout << std::string(96, '-') << "\n";
 
@@ -61,7 +61,7 @@ void Experiment_4_1() {
         auto A = RandomMatrix(n, 42);
         auto b = RandomVector(n, 123);
 
-        // Р“Р°СѓСЃСЃ Р±РµР· РІС‹Р±РѕСЂР° РІРµРґСѓС‰РµРіРѕ
+        // Гаусс без выбора ведущего
         double t_gauss_nopivot = 0;
         try {
             auto t0 = Clock::now();
@@ -72,71 +72,70 @@ void Experiment_4_1() {
             t_gauss_nopivot = -1;
         }
 
-        // Р“Р°СѓСЃСЃ СЃ РІС‹Р±РѕСЂРѕРј РІРµРґСѓС‰РµРіРѕ
+        // Гаусс с выбором ведущего
         auto t0 = Clock::now();
         auto x_pivot = GaussPartialPivot<double>(A, b);
         double t_gauss_pivot = Ms(Clock::now() - t0).count();
 
-        // LU СЂР°Р·Р»РѕР¶РµРЅРёРµ
+        // LU разложение
         t0 = Clock::now();
         auto lu = LUDecompose<double>(A);
         double t_lu_decomp = Ms(Clock::now() - t0).count();
 
-        // LU РїРѕРґСЃС‚Р°РЅРѕРІРєР°
+        // LU подстановка
         t0 = Clock::now();
         auto x_lu = LUSolveDecomposed<double>(lu, b);
         double t_lu_solve = Ms(Clock::now() - t0).count();
 
         std::cout << std::left
             << std::setw(6) << n
-            << std::setw(18) << (t_gauss_nopivot < 0 ? std::string("СЃРёРЅРіСѓР».") : std::to_string(t_gauss_nopivot).substr(0, 6) + " РјСЃ")
-            << std::setw(18) << (std::to_string(t_gauss_pivot).substr(0, 6) + " РјСЃ")
-            << std::setw(18) << (std::to_string(t_lu_decomp).substr(0, 6) + " РјСЃ")
-            << std::setw(18) << (std::to_string(t_lu_solve).substr(0, 6) + " РјСЃ")
-            << std::setw(18) << (std::to_string(t_lu_decomp + t_lu_solve).substr(0, 6) + " РјСЃ")
+            << std::setw(18) << (t_gauss_nopivot < 0 ? std::string("сингул.") : std::to_string(t_gauss_nopivot).substr(0, 6) + " мс")
+            << std::setw(18) << (std::to_string(t_gauss_pivot).substr(0, 6) + " мс")
+            << std::setw(18) << (std::to_string(t_lu_decomp).substr(0, 6) + " мс")
+            << std::setw(18) << (std::to_string(t_lu_solve).substr(0, 6) + " мс")
+            << std::setw(18) << (std::to_string(t_lu_decomp + t_lu_solve).substr(0, 6) + " мс")
             << "\n";
     }
 }
 
-// 4.2 Р­РєРѕРЅРѕРјРёСЏ РїСЂРё РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹С… РїСЂР°РІС‹С… С‡Р°СЃС‚СЏС…
+// 4.2 Экономия при множественных правых частях
 void Experiment_4_2() {
     std::cout << "\n========================================\n";
-    std::cout << "4.2 РњРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Рµ РїСЂР°РІС‹Рµ С‡Р°СЃС‚Рё (n=500)\n";
+    std::cout << "4.2 Множественные правые части (n=500)\n";
     std::cout << "========================================\n\n";
 
     int n = 500;
     auto A = RandomMatrix(n, 42);
 
-    // LU СЂР°Р·Р»РѕР¶РµРЅРёРµ вЂ” РѕРґРёРЅ СЂР°Р·
+    // LU разложение — один раз
     auto t0 = Clock::now();
     auto lu = LUDecompose<double>(A);
     double t_decomp = Ms(Clock::now() - t0).count();
 
-    std::cout << "LU СЂР°Р·Р»РѕР¶РµРЅРёРµ (РѕРґРёРЅ СЂР°Р·): " << t_decomp << " РјСЃ\n\n";
+    std::cout << "LU разложение (один раз): " << t_decomp << " мс\n\n";
 
     std::cout << std::left
         << std::setw(6) << "k"
-        << std::setw(25) << "Р“Р°СѓСЃСЃ (k СЃРёСЃС‚РµРј)"
-        << std::setw(25) << "LU (k РїРѕРґСЃС‚Р°РЅРѕРІРѕРє)"
-        << std::setw(25) << "LU РІСЃРµРіРѕ (СЂР°Р·Р».+РїРѕРґСЃС‚.)"
+        << std::setw(25) << "Гаусс (k систем)"
+        << std::setw(25) << "LU (k подстановок)"
+        << std::setw(25) << "LU всего (разл.+подст.)"
         << "\n";
     std::cout << std::string(81, '-') << "\n";
 
     int ks[] = { 1, 10, 100 };
 
     for (int k : ks) {
-        // Р“РµРЅРµСЂРёСЂСѓРµРј k РїСЂР°РІС‹С… С‡Р°СЃС‚РµР№
         MutableArraySequence<MutableArraySequence<double>> bs;
         for (int q = 0; q < k; q++)
             bs.Append(RandomVector(n, 100 + q));
 
-        // Р“Р°СѓСЃСЃ вЂ” k СЂР°Р· РїРѕР»РЅРѕРµ СЂРµС€РµРЅРёРµ
+        // Гаусс — k раз полное решение
         t0 = Clock::now();
         for (int q = 0; q < k; q++)
             GaussPartialPivot<double>(A, bs.Get(q));
         double t_gauss = Ms(Clock::now() - t0).count();
 
-        // LU вЂ” С‚РѕР»СЊРєРѕ k РїРѕРґСЃС‚Р°РЅРѕРІРѕРє
+        // LU — только k подстановок
         t0 = Clock::now();
         for (int q = 0; q < k; q++)
             LUSolveDecomposed<double>(lu, bs.Get(q));
@@ -144,24 +143,24 @@ void Experiment_4_2() {
 
         std::cout << std::left
             << std::setw(6) << k
-            << std::setw(25) << (std::to_string(t_gauss).substr(0, 6) + " РјСЃ")
-            << std::setw(25) << (std::to_string(t_lu_solve).substr(0, 6) + " РјСЃ")
-            << std::setw(25) << (std::to_string(t_decomp + t_lu_solve).substr(0, 6) + " РјСЃ")
+            << std::setw(25) << (std::to_string(t_gauss).substr(0, 6) + " мс")
+            << std::setw(25) << (std::to_string(t_lu_solve).substr(0, 6) + " мс")
+            << std::setw(25) << (std::to_string(t_decomp + t_lu_solve).substr(0, 6) + " мс")
             << "\n";
     }
 }
 
-// 4.3 РўРѕС‡РЅРѕСЃС‚СЊ РЅР° РјР°С‚СЂРёС†Рµ Р“РёР»СЊР±РµСЂС‚Р°
+// 4.3 Точность на матрице Гильберта
 void Experiment_4_3() {
     std::cout << "\n========================================\n";
-    std::cout << "4.3 РўРѕС‡РЅРѕСЃС‚СЊ РЅР° РјР°С‚СЂРёС†Рµ Р“РёР»СЊР±РµСЂС‚Р°\n";
+    std::cout << "4.3 Точность на матрице Гильберта\n";
     std::cout << "========================================\n\n";
 
     std::cout << std::left
         << std::setw(5) << "n"
-        << std::setw(22) << "РњРµС‚РѕРґ"
-        << std::setw(22) << "РћС‚РЅ. РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ"
-        << std::setw(22) << "РќРµРІСЏР·РєР°"
+        << std::setw(22) << "Метод"
+        << std::setw(22) << "Отн. погрешность"
+        << std::setw(22) << "Невязка"
         << "\n";
     std::cout << std::string(71, '-') << "\n";
 
@@ -170,12 +169,10 @@ void Experiment_4_3() {
     for (int n : sizes) {
         auto H = HilbertMatrix(n);
 
-        // РўРѕС‡РЅРѕРµ СЂРµС€РµРЅРёРµ x = (1, 1, ..., 1)
         MutableArraySequence<double> xExact;
         for (int i = 0; i < n; i++)
             xExact.Append(1.0);
 
-        // b = H * x
         MutableArraySequence<double> b;
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -186,7 +183,6 @@ void Experiment_4_3() {
 
         double xNorm = VectorNorm(xExact);
 
-        // Р¤СѓРЅРєС†РёСЏ РІС‹С‡РёСЃР»РµРЅРёСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕР№ РїРѕРіСЂРµС€РЅРѕСЃС‚Рё
         auto calcRelError = [&](const MutableArraySequence<double>& xApprox) {
             MutableArraySequence<double> diff;
             for (int i = 0; i < n; i++)
@@ -194,45 +190,42 @@ void Experiment_4_3() {
             return VectorNorm(diff) / xNorm;
             };
 
-        // Р“Р°СѓСЃСЃ Р±РµР· РІС‹Р±РѕСЂР°
         try {
             auto x1 = GaussNopivot<double>(H, b);
             double err = calcRelError(x1);
             double res = Residual(H, x1, b);
             std::cout << std::setw(5) << n
-                << std::setw(22) << "Р“Р°СѓСЃСЃ (Р±РµР· РІС‹Р±.)"
+                << std::setw(22) << "Гаусс (без выб.)"
                 << std::setw(22) << std::scientific << std::setprecision(2) << err
                 << std::setw(22) << std::fixed << std::setprecision(8) << res
                 << "\n";
         }
         catch (const std::exception& e) {
             std::cout << std::setw(5) << n
-                << std::setw(22) << "Р“Р°СѓСЃСЃ (Р±РµР· РІС‹Р±.)"
-                << std::setw(22) << "РћРЁРР‘РљРђ"
+                << std::setw(22) << "Гаусс (без выб.)"
+                << std::setw(22) << "ОШИБКА"
                 << std::setw(22) << e.what()
                 << "\n";
         }
 
-        // Р“Р°СѓСЃСЃ СЃ РІС‹Р±РѕСЂРѕРј
         try {
             auto x2 = GaussPartialPivot<double>(H, b);
             double err = calcRelError(x2);
             double res = Residual(H, x2, b);
             std::cout << std::setw(5) << n
-                << std::setw(22) << "Р“Р°СѓСЃСЃ (СЃ РІС‹Р±.)"
+                << std::setw(22) << "Гаусс (с выб.)"
                 << std::setw(22) << std::scientific << std::setprecision(2) << err
                 << std::setw(22) << std::fixed << std::setprecision(8) << res
                 << "\n";
         }
         catch (const std::exception& e) {
             std::cout << std::setw(5) << n
-                << std::setw(22) << "Р“Р°СѓСЃСЃ (СЃ РІС‹Р±.)"
-                << std::setw(22) << "РћРЁРР‘РљРђ"
+                << std::setw(22) << "Гаусс (с выб.)"
+                << std::setw(22) << "ОШИБКА"
                 << std::setw(22) << e.what()
                 << "\n";
         }
 
-        // LU СЂР°Р·Р»РѕР¶РµРЅРёРµ
         try {
             auto x3 = LUSolve<double>(H, b);
             double err = calcRelError(x3);
@@ -246,7 +239,7 @@ void Experiment_4_3() {
         catch (const std::exception& e) {
             std::cout << std::setw(5) << n
                 << std::setw(22) << "LU"
-                << std::setw(22) << "РћРЁРР‘РљРђ"
+                << std::setw(22) << "ОШИБКА"
                 << std::setw(22) << e.what()
                 << "\n";
         }
@@ -259,7 +252,7 @@ int main() {
     setlocale(LC_ALL, "Russian");
 
     std::cout << "========================================\n";
-    std::cout << "Р›Р°Р±РѕСЂР°С‚РѕСЂРЅР°СЏ: РЎСЂР°РІРЅРµРЅРёРµ РјРµС‚РѕРґРѕРІ РЎР›РђРЈ\n";
+    std::cout << "Лабораторная: Сравнение методов СЛАУ\n";
     std::cout << "========================================\n";
 
     Experiment_4_1();
@@ -267,7 +260,7 @@ int main() {
     Experiment_4_3();
 
     std::cout << "\n========================================\n";
-    std::cout << "Р’СЃРµ СЌРєСЃРїРµСЂРёРјРµРЅС‚С‹ Р·Р°РІРµСЂС€РµРЅС‹\n";
+    std::cout << "Все эксперименты завершены\n";
     std::cout << "========================================\n";
 
     return 0;

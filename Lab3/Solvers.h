@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "SquareMatrix.h"
 #include "RectangularMatrix.h"
 #include "lib/ArraySequence.h"
 #include <stdexcept>
@@ -82,13 +83,12 @@ MutableArraySequence<T> BackSubstitution(const IMatrix<T>& U,
 
 // Метод Гаусса без выбора ведущего элемента
 template <class T>
-MutableArraySequence<T> GaussNopivot(const IMatrix<T>& A,
+MutableArraySequence<T> GaussNopivot(const SquareMatrix<T>& A,
     const MutableArraySequence<T>& b) {
     int n = A.Rows();
     if (A.Cols() != n || b.GetLength() != n)
         throw std::invalid_argument("Invalid dimensions");
 
-    // Расширенная матрица [A|b]
     RectangularMatrix<T> M(n, n + 1);
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++)
@@ -120,7 +120,7 @@ MutableArraySequence<T> GaussNopivot(const IMatrix<T>& A,
 
 // Метод Гаусса с выбором ведущего по столбцу
 template <class T>
-MutableArraySequence<T> GaussPartialPivot(const IMatrix<T>& A,
+MutableArraySequence<T> GaussPartialPivot(const SquareMatrix<T>& A,
     const MutableArraySequence<T>& b) {
     int n = A.Rows();
     if (A.Cols() != n || b.GetLength() != n)
@@ -134,7 +134,6 @@ MutableArraySequence<T> GaussPartialPivot(const IMatrix<T>& A,
     }
 
     for (int col = 0; col < n; col++) {
-        // Ищем строку с максимальным элементом в столбце
         int maxRow = col;
         T maxVal = std::abs((double)M.Get(col, col));
         for (int row = col + 1; row < n; row++) {
@@ -144,7 +143,6 @@ MutableArraySequence<T> GaussPartialPivot(const IMatrix<T>& A,
         if (maxVal < 1e-12)
             throw std::runtime_error("Matrix is singular");
 
-        // Меняем строки
         if (maxRow != col)
             M.SwapRows(col, maxRow);
 
@@ -169,26 +167,23 @@ MutableArraySequence<T> GaussPartialPivot(const IMatrix<T>& A,
 
 // A = L * U
 template <class T>
-LUResult<T> LUDecompose(const IMatrix<T>& A) {
+LUResult<T> LUDecompose(const SquareMatrix<T>& A) {
     int n = A.Rows();
     if (A.Cols() != n)
         throw std::invalid_argument("Matrix must be square");
 
     LUResult<T> result(n);
 
-    // L — единичная диагональ
     for (int i = 0; i < n; i++)
         result.L.Set(i, i, T(1));
 
     for (int i = 0; i < n; i++) {
-        // Верхняя треугольная U — строка i
         for (int j = i; j < n; j++) {
             T sum = A.Get(i, j);
             for (int k = 0; k < i; k++)
                 sum = sum - result.L.Get(i, k) * result.U.Get(k, j);
             result.U.Set(i, j, sum);
         }
-        // Нижняя треугольная L — столбец i
         for (int j = i + 1; j < n; j++) {
             T sum = A.Get(j, i);
             for (int k = 0; k < i; k++)
@@ -203,7 +198,7 @@ LUResult<T> LUDecompose(const IMatrix<T>& A) {
 
 // Решение СЛАУ через LU: A*x = b
 template <class T>
-MutableArraySequence<T> LUSolve(const IMatrix<T>& A,
+MutableArraySequence<T> LUSolve(const SquareMatrix<T>& A,
     const MutableArraySequence<T>& b) {
     LUResult<T> lu = LUDecompose(A);
     MutableArraySequence<T> y = ForwardSubstitution(lu.L, b);
