@@ -83,6 +83,20 @@ public:
     void Set(int index, const T& value);
     void RemoveAt(int index);
 
+    Sequence<T>* Map(std::function<T(const T&)> f) const {
+        return ::Map<T, T>(this, f);
+    }
+
+    Sequence<T>* Where(std::function<bool(const T&)> pred) const {
+        return ::Where<T>(this, pred);
+    }
+
+    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
+        return ::Reduce<T, T>(this, [&](const T& acc, const T& x) {
+            return f(acc, x);
+            }, init);
+    }
+
     class Builder {
     private:
         MutableArraySequence<T>* seq_;

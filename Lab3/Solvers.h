@@ -12,16 +12,6 @@ struct LUResult {
     LUResult(int n) : L(n, n), U(n, n) {}
 };
 
-// Копирует матрицу в новую RectangularMatrix
-template <class T>
-RectangularMatrix<T> CopyMatrix(const IMatrix<T>& m) {
-    RectangularMatrix<T> result(m.Rows(), m.Cols());
-    for (int i = 0; i < m.Rows(); i++)
-        for (int j = 0; j < m.Cols(); j++)
-            result.Set(i, j, m.Get(i, j));
-    return result;
-}
-
 // Норма вектора
 template <class T>
 double VectorNorm(const MutableArraySequence<T>& v) {
@@ -138,7 +128,10 @@ MutableArraySequence<T> GaussPartialPivot(const SquareMatrix<T>& A,
         T maxVal = std::abs((double)M.Get(col, col));
         for (int row = col + 1; row < n; row++) {
             T val = std::abs((double)M.Get(row, col));
-            if (val > maxVal) { maxVal = val; maxRow = row; }
+            if (val > maxVal) { 
+                maxVal = val;
+                maxRow = row;
+            }
         }
         if (maxVal < 1e-12)
             throw std::runtime_error("Matrix is singular");

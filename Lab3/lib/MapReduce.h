@@ -35,12 +35,12 @@ Sequence<T>* Where(const Sequence<T>* seq, std::function<bool(const T&)> func) {
 // REDUCE — сворачивает последовательность в одно значение
 template <class T, class U>
 U Reduce(const Sequence<T>* seq, std::function<U(const U&, const T&)> func, const U& initial) {
-    U acc = initial;
+    U accum = initial;
     auto* en = seq->get_enumerator();
     while (en->move_next())
-        acc = func(acc, en->get_current());
+        accum = func(accum, en->get_current());
     delete en;
-    return acc;
+    return accum;
 }
 
 // ZIP — объединяет две последовательности в одну попарно
@@ -59,7 +59,7 @@ Sequence<Pair<T, U>>* Zip(const Sequence<T>* first, const Sequence<U>* second) {
 // UNZIP — разбивает последовательность пар на две
 template <class T, class U>
 void Unzip(const Sequence<Pair<T, U>>* seq,
-    Sequence<T>*& outFirst,
+    Sequence<T>*& outFirst, 
     Sequence<U>*& outSecond)
 {
     auto* first = new MutableArraySequence<T>();
@@ -92,10 +92,10 @@ MinMaxAvg<T> GetMinMaxAvg(const Sequence<T>& seq) {
 
     T mn = firstVal;
     T mx = firstVal;
-    double sum = 0.0;
+    double sum = 0.0; //сделать T
     int cnt = 0;
 
-    auto* en2 = seq.get_enumerator();
+    auto* en2 = seq.get_enumerator(); //убрать итератор
     while (en2->move_next()) {
         const T& val = en2->get_current();
         if (val < mn) mn = val;
@@ -133,7 +133,7 @@ double GetMedian(const Sequence<T>& seq) {
 
     // Копируем в массив для сортировки
     T* arr = new T[n];
-    auto* en = seq.get_enumerator();
+    auto* en = seq.get_enumerator(); // одинаковый стиль
     for (int i = 0; i < n && en->move_next(); i++)
         arr[i] = en->get_current();
     delete en;
@@ -159,7 +159,7 @@ int CountInversions(const Sequence<T>& seq) {
     delete en;
 
     for (int i = 0; i < n; i++)
-        for (int j = i + 1; j < n; j++)
+        for (int j = i + 1; j < n; j++) // добавить клонирование итератора en
             if (arr[i] > arr[j])
                 count++;
 
@@ -167,7 +167,7 @@ int CountInversions(const Sequence<T>& seq) {
     return count;
 }
 
-// П-5: все префиксы [a0], [a0,a1], [a0,a1,a2]...
+// П-5: все префиксы [a0], [a0,a1], [a0,a1,a2]... УТЕЧКА ПАМЯТИ
 template <class T>
 MutableArraySequence<MutableArraySequence<T>*>* GetPrefixes(const Sequence<T>& seq) {
     auto* result = new MutableArraySequence<MutableArraySequence<T>*>();

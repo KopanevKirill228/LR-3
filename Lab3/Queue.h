@@ -2,7 +2,6 @@
 
 #include "ICollection.h"
 #include "lib/ListSequence.h"
-#include <functional>
 #include <stdexcept>
 
 template <typename T>
@@ -17,18 +16,12 @@ public:
     size_t GetCount() const override;
     bool IsEmpty() const override;
 
-    void PushBack(const T& item) override;
-    T PopFront() override;
-
-    const T& PeekFront() const override;
-    const T& PeekBack()  const override;
-
     void Enqueue(const T& item);
     T Dequeue();
-    const T& Front() const;
-    const T& Back()  const;
+    const T& PeekFront() const;
+    const T& PeekBack() const;
 
-    ICollection<T>* Concat(const ICollection<T>& other) const override;
+    Queue<T> Concat(const ICollection<T>& other) const;
 
     const MutableListSequence<T>* GetSequence() const { return &seq_; }
 

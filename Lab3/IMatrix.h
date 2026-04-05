@@ -4,32 +4,32 @@
 template <class T>
 class IMatrix {
 public:
-    virtual T Get(int row, int col) const = 0;
-    virtual void Set(int row, int col, T val) = 0;
+    virtual const T& Get(int row, int col) const = 0;
+    virtual void Set(int row, int col, const T& val) = 0;
     virtual int Rows() const = 0;
     virtual int Cols() const = 0;
 
     virtual IMatrix<T>* Add(const IMatrix<T>& other) const = 0;
-    virtual IMatrix<T>* MulScalar(T scalar) const = 0;
-    virtual IMatrix<T>* MulMatrix(const IMatrix<T>& other) const = 0;
-    virtual double Norm() const = 0; // Норма Фробениуса
+    virtual IMatrix<T>* MultiplyByScalar(const T& scalar) const = 0;
+    virtual IMatrix<T>* MultiplyByMatrix(const IMatrix<T>& other) const = 0;
+    virtual double FrobeniusNorm() const = 0;
 
     virtual void SwapRows(int i, int j) = 0;
-    virtual void MulRow(int i, T scalar) = 0;
-    virtual void AddRow(int dst, int src, T scalar) = 0;
+    virtual void ScaleRow(int row, const T& scalar) = 0;
+    virtual void AddScaledRow(int rowToModify, int rowToAdd, const T& scalar);
     virtual void SwapCols(int i, int j) = 0;
-    virtual void MulCol(int j, T scalar) = 0;
-    virtual void AddCol(int dst, int src, T scalar) = 0;
+    virtual void ScaleCol(int col, const T& scalar) = 0;
+    virtual void AddScaledCol(int colToModify, int colToAdd, const T& scalar);
 
     virtual IMatrix<T>* Transpose() const = 0;
 
     virtual ~IMatrix() = default;
 
 protected:
-    void CheckIndex(int row, int col, int rows, int cols) const {
-        if (row < 0 || row >= rows)
+    void CheckIndex(int row, int col) const {
+        if (row < 0 || row >= Rows())
             throw std::out_of_range("Row index out of range");
-        if (col < 0 || col >= cols)
+        if (col < 0 || col >= Cols())
             throw std::out_of_range("Col index out of range");
     }
 
@@ -38,7 +38,7 @@ protected:
             throw std::invalid_argument("Matrix sizes do not match");
     }
 
-    void CheckMulSize(const IMatrix<T>& other) const {
+    void CheckMultiplySize(const IMatrix<T>& other) const {
         if (Cols() != other.Rows())
             throw std::invalid_argument("Matrix sizes incompatible for multiplication");
     }

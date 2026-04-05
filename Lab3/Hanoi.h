@@ -12,7 +12,7 @@ struct Move {
 template <typename T>
 class Hanoi {
 public:
-    Hanoi(Stack<T> source, std::string nameA, std::string nameB, std::string nameC);
+    Hanoi(Stack<T> source, const std::string& nameA, const std::string& nameB, const std::string& nameC);
 
     void Solve();
 

@@ -1,12 +1,12 @@
 ﻿#pragma once
 
 template <typename T>
-Hanoi<T>::Hanoi(Stack<T> source, std::string nameA, std::string nameB, std::string nameC)
+Hanoi<T>::Hanoi(Stack<T> source, const std::string& nameA, const std::string& nameB, const std::string& nameC)
     : pegA_(source), nameA_(nameA), nameB_(nameB), nameC_(nameC)
 {
     for (size_t i = 0; i < pegA_.GetCount(); ++i)
-        if ((int)pegA_.Get(i) > maxDisk_)
-            maxDisk_ = (int)pegA_.Get(i);
+        if (static_cast<int>(pegA_.Get(i)) > maxDisk_)
+            maxDisk_ = static_cast<int>(pegA_.Get(i));
 }
 
 template <typename T>

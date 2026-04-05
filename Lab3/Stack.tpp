@@ -1,10 +1,10 @@
-﻿#include <stdexcept>
+﻿#pragma once
 #include "Stack.h"
 
 template <typename T>
 const T& Stack<T>::Get(size_t index) const {
-    if (static_cast<int>(index) >= seq_.GetLength())
-        throw std::out_of_range("Index out of range");
+    if (index >= static_cast<size_t>(seq_.GetLength()))
+        throw std::out_of_range("Stack index out of range");
     return seq_.Get(static_cast<int>(index));
 }
 
@@ -19,44 +19,30 @@ bool Stack<T>::IsEmpty() const {
 }
 
 template <typename T>
-void Stack<T>::PushBack(const T& item) {
-    seq_.Prepend(item);
+void Stack<T>::Push(const T& item) {
+    seq_.Append(item);
 }
 
 template <typename T>
-T Stack<T>::PopFront() {
+T Stack<T>::Pop() {
     if (IsEmpty())
-        throw std::underflow_error("Stack is empty");
-    T top = seq_.GetFirst();
-    seq_.RemoveFirst();
-    return top;
+        throw std::out_of_range("Pop from empty stack");
+    T value = std::move(seq_.Get(seq_.GetLength() - 1));
+    seq_.RemoveAt(seq_.GetLength() - 1);
+    return value;
 }
 
 template <typename T>
-const T& Stack<T>::PeekFront() const {
+const T& Stack<T>::Peek() const {
     if (IsEmpty())
-        throw std::underflow_error("Stack is empty");
-    return seq_.GetFirst();
+        throw std::out_of_range("Peek from empty stack");
+    return seq_.Get(seq_.GetLength() - 1);
 }
 
 template <typename T>
-const T& Stack<T>::PeekBack() const {
-    return PeekFront();
-}
-
-template <typename T>
-void Stack<T>::Push(const T& item) { PushBack(item); }
-
-template <typename T>
-T Stack<T>::Pop() { return PopFront(); }
-
-template <typename T>
-const T& Stack<T>::Peek() const { return PeekFront(); }
-
-template <typename T>
-ICollection<T>* Stack<T>::Concat(const ICollection<T>& other) const {
-    Stack<T>* result = new Stack<T>(*this);
-    for (int i = static_cast<int>(other.GetCount()) - 1; i >= 0; --i)
-        result->PushBack(other.Get(static_cast<size_t>(i)));
+Stack<T> Stack<T>::Concat(const ICollection<T>& other) const {
+    Stack<T> result = *this;
+    for (size_t i = 0; i < other.GetCount(); i++)
+        result.Push(other.Get(i));
     return result;
 }
