@@ -9,17 +9,17 @@ IMatrix<T>* operator+(const IMatrix<T>& a, const IMatrix<T>& b) {
 
 template <class T>
 IMatrix<T>* operator*(const IMatrix<T>& m, T scalar) {
-    return m.MulScalar(scalar);
+    return m.MultiplyByScalar(scalar);
 }
 
 template <class T>
 IMatrix<T>* operator*(T scalar, const IMatrix<T>& m) {
-    return m.MulScalar(scalar);
+    return m.MultiplyByScalar(scalar);
 }
 
 template <class T>
 IMatrix<T>* operator*(const IMatrix<T>& a, const IMatrix<T>& b) {
-    return a.MulMatrix(b);
+    return a.MultiplyByMatrix(b);
 }
 
 template <class T>

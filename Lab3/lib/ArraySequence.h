@@ -4,6 +4,8 @@
 #include "Dynamic_Array.h"
 #include "ienumerator.h"
 #include <stdexcept>
+#include <functional>
+
 
 template <class T>
 class ArraySequence : public Sequence<T> {
@@ -83,19 +85,9 @@ public:
     void Set(int index, const T& value);
     void RemoveAt(int index);
 
-    Sequence<T>* Map(std::function<T(const T&)> f) const {
-        return ::Map<T, T>(this, f);
-    }
-
-    Sequence<T>* Where(std::function<bool(const T&)> pred) const {
-        return ::Where<T>(this, pred);
-    }
-
-    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
-        return ::Reduce<T, T>(this, [&](const T& acc, const T& x) {
-            return f(acc, x);
-            }, init);
-    }
+    Sequence<T>* Map(std::function<T(const T&)> f) const;
+    Sequence<T>* Where(std::function<bool(const T&)> pred) const;
+    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const;
 
     class Builder {
     private:
@@ -127,5 +119,25 @@ protected:
     ArraySequence<T>* GetInstance() override;
     ArraySequence<T>* Clone() const override;
 };
+
+// Если делать раньше, то получится круг: ArraySequence -> MapReduce -> ArraySequence
+#include "MapReduce.h"
+
+template <class T>
+Sequence<T>* MutableArraySequence<T>::Map(std::function<T(const T&)> f) const {
+    return ::Map<T, T>(this, f);
+}
+
+template <class T>
+Sequence<T>* MutableArraySequence<T>::Where(std::function<bool(const T&)> pred) const {
+    return ::Where<T>(this, pred);
+}
+
+template <class T>
+T MutableArraySequence<T>::Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
+    return ::Reduce<T, T>(this, [&](const T& acc, const T& x) {
+        return f(acc, x);
+        }, init);
+}
 
 #include "ArraySequence.tpp"

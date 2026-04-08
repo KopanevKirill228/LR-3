@@ -16,10 +16,10 @@ public:
 
     virtual void SwapRows(int i, int j) = 0;
     virtual void ScaleRow(int row, const T& scalar) = 0;
-    virtual void AddScaledRow(int rowToModify, int rowToAdd, const T& scalar);
+    virtual void AddScaledRow(int rowToModify, int rowToAdd, const T& scalar) = 0;
     virtual void SwapCols(int i, int j) = 0;
     virtual void ScaleCol(int col, const T& scalar) = 0;
-    virtual void AddScaledCol(int colToModify, int colToAdd, const T& scalar);
+    virtual void AddScaledCol(int colToModify, int colToAdd, const T& scalar) = 0;
 
     virtual IMatrix<T>* Transpose() const = 0;
 

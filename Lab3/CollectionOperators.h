@@ -3,12 +3,6 @@
 #include "ICollection.h"
 #include <ostream>
 
-// Конкатенация: s1 + s2
-template <typename T>
-ICollection<T>* operator+(const ICollection<T>& a, const ICollection<T>& b) {
-    return a.Concat(b);
-}
-
 // Сравнение по элементам
 template <typename T>
 bool operator==(const ICollection<T>& a, const ICollection<T>& b) {

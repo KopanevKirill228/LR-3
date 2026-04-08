@@ -27,7 +27,7 @@ template <typename T>
 MutableArraySequence<int> HanoiRenderer<T>::collectDisks(const Stack<T>& peg) const {
     int count = (int)peg.GetCount();
     MutableArraySequence<int> result;
-    for (int i = count - 1; i >= 0; --i)
+    for (int i = 0; i < count; ++i)
         result.Append((int)peg.Get(i));
     return result;
 }

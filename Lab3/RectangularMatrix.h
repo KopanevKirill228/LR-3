@@ -6,7 +6,7 @@ template <class T>
 class RectangularMatrix : public IMatrix<T> {
 public:
     RectangularMatrix(int rows, int cols);
-    RectangularMatrix(int rows, int cols, T* data);
+    RectangularMatrix(int rows, int cols, const T* data);
     RectangularMatrix(const RectangularMatrix<T>& other) = default;
     ~RectangularMatrix() override = default;
 
