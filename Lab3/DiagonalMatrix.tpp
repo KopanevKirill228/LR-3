@@ -2,6 +2,7 @@
 #include "DiagonalMatrix.h"
 #include <stdexcept>
 #include <cmath>
+#include "RectangularMatrix.h"
 
 
 // Конструкторы
@@ -19,12 +20,12 @@ DiagonalMatrix<T>::DiagonalMatrix(int n)
 template <class T>
 DiagonalMatrix<T>::DiagonalMatrix(int n, const T* diag)
     : n(n), diag_() {
-    if (n <= 0) {
+    if (n <= 0)
         throw std::invalid_argument("Matrix dimension must be positive");
-    }
-    for (int i = 0; i < n; i++) {
+    if (diag == nullptr)
+        throw std::invalid_argument("Diagonal array is null");
+    for (int i = 0; i < n; i++)
         diag_.Append(diag[i]);
-    }
 }
 
 
@@ -99,10 +100,10 @@ IMatrix<T>* DiagonalMatrix<T>::MultiplyByScalar(const T& scalar) const {
 template <class T>
 IMatrix<T>* DiagonalMatrix<T>::MultiplyByMatrix(const IMatrix<T>& other) const {
     this->CheckMultiplySize(other);
-    auto* result = new DiagonalMatrix<T>(n);
-    for (int i = 0; i < n; i++) {
-        result->SetDiag(i, diag_.Get(i) * other.Get(i, i));
-    }
+    auto* result = new RectangularMatrix<T>(n, other.Cols());
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < other.Cols(); j++)
+            result->Set(i, j, diag_.Get(i) * other.Get(i, j));
     return result;
 }
 

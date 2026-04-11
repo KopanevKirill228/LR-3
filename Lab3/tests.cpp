@@ -735,7 +735,7 @@ void test_SparseMatrix_RowColOps() {
         m.Set(0, 0, 1); m.Set(1, 1, 2);
         m.SwapRows(0, 1);
         CHECK("sparse swaprows (0,0) now 0", m.Get(0, 0) == 0);
-        CHECK("sparse swaprows (0,1) now 0", m.Get(0, 1) == 2);
+        CHECK("sparse swaprows (0,1) now 2", m.Get(0, 1) == 2);
         CHECK("sparse swaprows (1,1) now 0", m.Get(1, 1) == 0);
         CHECK("sparse swaprows (1,0) now 1", m.Get(1, 0) == 1);
     }

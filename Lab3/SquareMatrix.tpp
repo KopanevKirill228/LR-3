@@ -6,7 +6,7 @@ SquareMatrix<T>::SquareMatrix(int n)
     : RectangularMatrix<T>(n, n) {}
 
 template <class T>
-SquareMatrix<T>::SquareMatrix(int n, T* data)
+SquareMatrix<T>::SquareMatrix(int n, const T* data)
     : RectangularMatrix<T>(n, n, data) {}
 
 template <class T>
@@ -25,7 +25,7 @@ T SquareMatrix<T>::Determinant() const {
     for (int col = 0; col < n; col++) {
         int pivot = -1;
         for (int row = col; row < n; row++) {
-            if (temp.Get(row, col) != T()) {
+            if (std::abs((double)temp.Get(row, col)) > 1e-12) {
                 pivot = row;
                 break;
             }

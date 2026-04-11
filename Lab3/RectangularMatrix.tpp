@@ -21,6 +21,8 @@ RectangularMatrix<T>::RectangularMatrix(int rows, int cols, const T* data)
     if (rows <= 0 || cols <= 0) {
         throw std::invalid_argument("Matrix dimensions must be positive");
     }
+    if (data == nullptr)
+        throw std::invalid_argument("Data array is null");
     for (int i = 0; i < rows * cols; i++) {
         data_.Append(data[i]);
     }

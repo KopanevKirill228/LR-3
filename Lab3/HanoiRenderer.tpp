@@ -2,7 +2,10 @@
 #include "HanoiRenderer.h"
 
 template <typename T>
-HanoiRenderer<T>::HanoiRenderer(int maxDisk) : maxDisk_(maxDisk) {}
+HanoiRenderer<T>::HanoiRenderer(int maxDisk) : maxDisk_(maxDisk) {
+    if (maxDisk <= 0)
+        throw std::invalid_argument("maxDisk must be positive");
+}
 
 template <typename T>
 void HanoiRenderer<T>::enableAnsi() const {
@@ -99,7 +102,7 @@ void HanoiRenderer<T>::Render(
 
     std::cout << "  " << GRAY
         << "Moves: " << movesDone
-        << "  |  Total: " << ((1 << maxDisk_) - 1)
+        << "  |  Total: " << ((1LL << maxDisk_) - 1)
         << RESET << "\n";
 }
 

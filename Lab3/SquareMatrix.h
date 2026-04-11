@@ -5,7 +5,7 @@ template <class T>
 class SquareMatrix : public RectangularMatrix<T> {
 public:
     SquareMatrix(int n);
-    SquareMatrix(int n, T* data);
+    SquareMatrix(int n, const T* data);
     SquareMatrix(const SquareMatrix<T>& other) = default;
     ~SquareMatrix() override = default;
 

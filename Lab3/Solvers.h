@@ -49,6 +49,8 @@ MutableArraySequence<T> ForwardSubstitution(const IMatrix<T>& L,
         T sum = b.Get(i);
         for (int j = 0; j < i; j++)
             sum = sum - L.Get(i, j) * y.Get(j);
+        if (std::abs((double)L.Get(i, i)) < 1e-12)
+            throw std::runtime_error("Zero diagonal in ForwardSubstitution");
         y.Set(i, sum / L.Get(i, i));
     }
     return y;
@@ -66,6 +68,8 @@ MutableArraySequence<T> BackSubstitution(const IMatrix<T>& U,
         T sum = y.Get(i);
         for (int j = i + 1; j < n; j++)
             sum = sum - U.Get(i, j) * x.Get(j);
+        if (std::abs((double)U.Get(i, i)) < 1e-12)
+            throw std::runtime_error("Zero diagonal in BackSubstitution");
         x.Set(i, sum / U.Get(i, i));
     }
     return x;
