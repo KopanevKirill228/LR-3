@@ -131,8 +131,14 @@ void Experiment_4_2() {
 
         // √аусс Ч k раз полное решение
         t0 = Clock::now();
-        for (int q = 0; q < k; q++)
-            GaussPartialPivot<double>(A, bs.Get(q));
+        try {
+            for (int q = 0; q < k; q++)
+                GaussPartialPivot<double>(A, bs.Get(q));
+        }
+        catch (const std::exception& e) {
+            std::cout << "  [ERR] " << e.what() << "\n";
+        }
+
         double t_gauss = Ms(Clock::now() - t0).count();
 
         // LU Ч только k подстановок

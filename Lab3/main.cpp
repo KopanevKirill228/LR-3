@@ -23,15 +23,20 @@ static bool readInt(int& val) {
     return true;
 }
 
-static bool menu(const std::string& prompt, int lo, int hi, int& choice) {
+static bool readIntWithPrompt(int& val, const std::string& prompt) {
+    std::cout << prompt;
+    return readInt(val);
+}
+
+static bool readIntInRange(int& val, const std::string& prompt, int lo, int hi) {
     while (true) {
         std::cout << prompt;
-        if (!readInt(choice)) {
+        if (!readInt(val)) {
             std::cout << "  [ERR] Not a number. Try again.\n";
             continue;
         }
-        if (choice == 0) return false;
-        if (choice < lo || choice > hi) {
+        if (val == 0) return false;
+        if (val < lo || val > hi) {
             std::cout << "  [ERR] Enter a number from " << lo
                 << " to " << hi << " (0 = back).\n";
             continue;
@@ -53,7 +58,6 @@ static void printMatrix(const IMatrix<int>& m) {
     }
 }
 
-// печатает результат операции и удаляет его
 static void printAndDelete(IMatrix<int>* res) {
     if (res) {
         printMatrix(*res);
@@ -61,9 +65,75 @@ static void printAndDelete(IMatrix<int>* res) {
     }
 }
 
+static void printError(const std::string& msg) {
+    std::cout << "  [ERR] " << msg << "\n";
+}
+
+static bool handleInputError() {
+    printError("Not a number");
+    return false;
+}
+
+
+static bool readMatrixDims(int& rows, int& cols) {
+    if (!readIntWithPrompt(rows, "  Rows: ") || rows <= 0) {
+        printError("Rows must be positive");
+        return false;
+    }
+    if (!readIntWithPrompt(cols, "  Cols: ") || cols <= 0) {
+        printError("Cols must be positive");
+        return false;
+    }
+    return true;
+}
+
+static bool readSquareDim(int& n) {
+    if (!readIntWithPrompt(n, "  Size (n): ") || n <= 0) {
+        printError("Size must be positive");
+        return false;
+    }
+    return true;
+}
+
+static void fillMatrix(IMatrix<int>& m) {
+    std::cout << "  Enter elements row by row:\n";
+    for (int i = 0; i < m.Rows(); i++) {
+        for (int j = 0; j < m.Cols(); j++) {
+            int val;
+            std::string prompt = "  [" + std::to_string(i) + "][" + std::to_string(j) + "]: ";
+            while (!readIntWithPrompt(val, prompt)) {
+                printError("Not a number. Try again");
+                prompt = "  [" + std::to_string(i) + "][" + std::to_string(j) + "]: ";
+            }
+            try {
+                m.Set(i, j, val);
+            }
+            catch (const std::exception& e) {
+                printError(std::string(e.what()) + " (skipped)");
+            }
+        }
+    }
+}
+
+static bool readTwoInts(int& a, int& b, const std::string& promptA, const std::string& promptB) {
+    if (!readIntWithPrompt(a, promptA)) return handleInputError();
+    if (!readIntWithPrompt(b, promptB)) return handleInputError();
+    return true;
+}
+
+static bool readThreeInts(int& a, int& b, int& c,
+    const std::string& promptA, const std::string& promptB, const std::string& promptC) {
+    if (!readIntWithPrompt(a, promptA)) return handleInputError();
+    if (!readIntWithPrompt(b, promptB)) return handleInputError();
+    if (!readIntWithPrompt(c, promptC)) return handleInputError();
+    return true;
+}
+
+
 static void stackMenu() {
     Stack<int> s;
     int choice;
+
     while (true) {
         printSeparator();
         std::cout << "  Stack  (size=" << s.GetCount() << ")\n";
@@ -73,60 +143,78 @@ static void stackMenu() {
         std::cout << "  4. Concat with another stack\n";
         std::cout << "  5. Print all\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 5, choice)) return;
 
-        if (choice == 1) {
+        if (!readIntInRange(choice, "Choice: ", 1, 5)) return;
+
+        switch (choice) {
+        case 1: {
             int val;
-            std::cout << "  Value: ";
-            if (!readInt(val)) { std::cout << "  [ERR] Not a number.\n"; continue; }
+            if (!readIntWithPrompt(val, "  Value: ")) {
+                handleInputError();
+                continue;
+            }
             s.Push(val);
             std::cout << "  Pushed " << val << "\n";
+            break;
         }
-        else if (choice == 2) {
+        case 2: {
             try {
                 std::cout << "  Popped: " << s.Pop() << "\n";
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
+            break;
         }
-        else if (choice == 3) {
+        case 3: {
             try {
                 std::cout << "  Top: " << s.Peek() << "\n";
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
+            break;
         }
-        else if (choice == 4) {
+        case 4: {
             Stack<int> other;
             int n;
-            std::cout << "  How many elements to add: ";
-            if (!readInt(n) || n < 0) {
-                std::cout << "  [ERR] Invalid count.\n"; continue;
+            if (!readIntWithPrompt(n, "  How many elements to add: ") || n < 0) {
+                printError("Invalid count");
+                continue;
             }
             for (int i = 0; i < n; i++) {
                 int val;
-                std::cout << "  Element " << (i + 1) << ": ";
-                if (!readInt(val)) { std::cout << "  [ERR] Not a number.\n"; i--; continue; }
+                std::string prompt = "  Element " + std::to_string(i + 1) + ": ";
+                while (!readIntWithPrompt(val, prompt)) {
+                    handleInputError();
+                    prompt = "  Element " + std::to_string(i + 1) + ": ";
+                }
                 other.Push(val);
             }
             s = s.Concat(other);
             std::cout << "  Concatenated. New size: " << s.GetCount() << "\n";
+            break;
         }
-        else if (choice == 5) {
-            if (s.IsEmpty()) { std::cout << "  (empty)\n"; continue; }
+        case 5: {
+            if (s.IsEmpty()) {
+                std::cout << "  (empty)\n";
+                continue;
+            }
             std::cout << "  Bottom -> Top: ";
             for (size_t i = 0; i < s.GetCount(); i++)
                 std::cout << s.Get(i) << " ";
             std::cout << "\n";
+            break;
+        }
         }
     }
 }
 
+
 static void queueMenu() {
     Queue<int> q;
     int choice;
+
     while (true) {
         printSeparator();
         std::cout << "  Queue  (size=" << q.GetCount() << ")\n";
@@ -137,79 +225,99 @@ static void queueMenu() {
         std::cout << "  5. Concat with another queue\n";
         std::cout << "  6. Print all\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 6, choice)) return;
 
-        if (choice == 1) {
+        if (!readIntInRange(choice, "Choice: ", 1, 6)) return;
+
+        switch (choice) {
+        case 1: {
             int val;
-            std::cout << "  Value: ";
-            if (!readInt(val)) { std::cout << "  [ERR] Not a number.\n"; continue; }
+            if (!readIntWithPrompt(val, "  Value: ")) {
+                handleInputError();
+                continue;
+            }
             q.Enqueue(val);
             std::cout << "  Enqueued " << val << "\n";
+            break;
         }
-        else if (choice == 2) {
+        case 2: {
             try {
                 std::cout << "  Dequeued: " << q.Dequeue() << "\n";
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
+            break;
         }
-        else if (choice == 3) {
+        case 3: {
             try {
                 std::cout << "  Front: " << q.PeekFront() << "\n";
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
+            break;
         }
-        else if (choice == 4) {
+        case 4: {
             try {
                 std::cout << "  Back: " << q.PeekBack() << "\n";
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
+            break;
         }
-        else if (choice == 5) {
+        case 5: {
             Queue<int> other;
             int n;
-            std::cout << "  How many elements to add: ";
-            if (!readInt(n) || n < 0) {
-                std::cout << "  [ERR] Invalid count.\n"; continue;
+            if (!readIntWithPrompt(n, "  How many elements to add: ") || n < 0) {
+                printError("Invalid count");
+                continue;
             }
             for (int i = 0; i < n; i++) {
                 int val;
-                std::cout << "  Element " << (i + 1) << ": ";
-                if (!readInt(val)) { std::cout << "  [ERR] Not a number.\n"; i--; continue; }
+                std::string prompt = "  Element " + std::to_string(i + 1) + ": ";
+                while (!readIntWithPrompt(val, prompt)) {
+                    handleInputError();
+                    prompt = "  Element " + std::to_string(i + 1) + ": ";
+                }
                 other.Enqueue(val);
             }
             q = q.Concat(other);
             std::cout << "  Concatenated. New size: " << q.GetCount() << "\n";
+            break;
         }
-        else if (choice == 6) {
-            if (q.IsEmpty()) { std::cout << "  (empty)\n"; continue; }
+        case 6: {
+            if (q.IsEmpty()) {
+                std::cout << "  (empty)\n";
+                continue;
+            }
             std::cout << "  Front -> Back: ";
             for (size_t i = 0; i < q.GetCount(); i++)
                 std::cout << q.Get(i) << " ";
             std::cout << "\n";
+            break;
+        }
         }
     }
 }
 
+
 static void hanoiMenu() {
     int choice;
+
     while (true) {
         printSeparator();
         std::cout << "  Hanoi Tower\n";
         std::cout << "  1. Solve (print moves)\n";
         std::cout << "  2. Solve (animated)\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 2, choice)) return;
+
+        if (!readIntInRange(choice, "Choice: ", 1, 2)) return;
 
         int n;
-        std::cout << "  Number of disks (1-12): ";
-        if (!readInt(n) || n < 1 || n > 12) {
-            std::cout << "  [ERR] Enter a number from 1 to 12.\n"; continue;
+        if (!readIntWithPrompt(n, "  Number of disks (1-12): ") || n < 1 || n > 12) {
+            printError("Enter a number from 1 to 12");
+            continue;
         }
 
         Stack<int> src;
@@ -230,9 +338,9 @@ static void hanoiMenu() {
         }
         else if (choice == 2) {
             int delay;
-            std::cout << "  Delay ms (100-2000): ";
-            if (!readInt(delay) || delay < 100 || delay > 2000) {
-                std::cout << "  [ERR] Enter 100-2000.\n"; continue;
+            if (!readIntWithPrompt(delay, "  Delay ms (100-2000): ") || delay < 100 || delay > 2000) {
+                printError("Enter 100-2000");
+                continue;
             }
             HanoiRenderer<int> renderer(n);
             renderer.SolveAnimated(h, delay);
@@ -240,43 +348,6 @@ static void hanoiMenu() {
     }
 }
 
-static bool readMatrixDims(int& rows, int& cols) {
-    std::cout << "  Rows: ";
-    if (!readInt(rows) || rows <= 0) {
-        std::cout << "  [ERR] Rows must be positive.\n"; return false;
-    }
-    std::cout << "  Cols: ";
-    if (!readInt(cols) || cols <= 0) {
-        std::cout << "  [ERR] Cols must be positive.\n"; return false;
-    }
-    return true;
-}
-
-static bool readSquareDim(int& n) {
-    std::cout << "  Size (n): ";
-    if (!readInt(n) || n <= 0) {
-        std::cout << "  [ERR] Size must be positive.\n"; return false;
-    }
-    return true;
-}
-
-static void fillMatrix(IMatrix<int>& m) {
-    std::cout << "  Enter elements row by row:\n";
-    for (int i = 0; i < m.Rows(); i++) {
-        for (int j = 0; j < m.Cols(); j++) {
-            int val;
-            std::cout << "  [" << i << "][" << j << "]: ";
-            while (!readInt(val)) {
-                std::cout << "  [ERR] Not a number. Try again.\n";
-                std::cout << "  [" << i << "][" << j << "]: ";
-            }
-            try { m.Set(i, j, val); }
-            catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << " (skipped)\n";
-            }
-        }
-    }
-}
 
 static void rectangularMatrixMenu() {
     RectangularMatrix<int>* m = nullptr;
@@ -301,7 +372,8 @@ static void rectangularMatrixMenu() {
         std::cout << "  12. Scale col\n";
         std::cout << "  13. Add scaled col\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 13, choice)) { delete m; return; }
+
+        if (!readIntInRange(choice, "Choice: ", 1, 13)) { delete m; return; }
 
         if (choice == 1) {
             int r, c;
@@ -312,7 +384,7 @@ static void rectangularMatrixMenu() {
             std::cout << "  Created.\n";
         }
         else if (!m) {
-            std::cout << "  [ERR] Create a matrix first.\n";
+            printError("Create a matrix first");
         }
         else if (choice == 2) {
             printMatrix(*m);
@@ -326,13 +398,15 @@ static void rectangularMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 4) {
             int s;
-            std::cout << "  Scalar: ";
-            if (!readInt(s)) { std::cout << "  [ERR] Not a number.\n"; continue; }
+            if (!readIntWithPrompt(s, "  Scalar: ")) {
+                handleInputError();
+                continue;
+            }
             auto* res = m->MultiplyByScalar(s);
             std::cout << "  Result:\n";
             printAndDelete(res);
@@ -342,7 +416,8 @@ static void rectangularMatrixMenu() {
             std::cout << "  Second matrix dims (must be " << m->Cols() << " x ?):\n";
             if (!readMatrixDims(r, c)) continue;
             if (r != m->Cols()) {
-                std::cout << "  [ERR] Rows must equal " << m->Cols() << "\n"; continue;
+                printError("Rows must equal " + std::to_string(m->Cols()));
+                continue;
             }
             RectangularMatrix<int> other(r, c);
             fillMatrix(other);
@@ -352,7 +427,7 @@ static void rectangularMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 6) {
@@ -365,50 +440,75 @@ static void rectangularMatrixMenu() {
         }
         else if (choice == 8) {
             int i, j;
-            std::cout << "  Row 1 (0-based): "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Row 2 (0-based): "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapRows(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Row 1 (0-based): ", "  Row 2 (0-based): ")) continue;
+            try {
+                m->SwapRows(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 9) {
             int row, s;
-            std::cout << "  Row (0-based): "; if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";        if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleRow(row, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(row, s, "  Row (0-based): ", "  Scalar: ")) continue;
+            try {
+                m->ScaleRow(row, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 10) {
-            int target, source, s;
-            std::cout << "  Target row: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source row: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledRow(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target row: ", "  Source row: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledRow(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 11) {
             int i, j;
-            std::cout << "  Col 1 (0-based): "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Col 2 (0-based): "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapCols(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Col 1 (0-based): ", "  Col 2 (0-based): ")) continue;
+            try {
+                m->SwapCols(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 12) {
             int col, s;
-            std::cout << "  Col (0-based): "; if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";        if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleCol(col, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(col, s, "  Col (0-based): ", "  Scalar: ")) continue;
+            try {
+                m->ScaleCol(col, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 13) {
-            int target, source, s;
-            std::cout << "  Target col: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source col: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledCol(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target col: ", "  Source col: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledCol(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
     }
 }
+
 
 static void squareMatrixMenu() {
     SquareMatrix<int>* m = nullptr;
@@ -435,7 +535,8 @@ static void squareMatrixMenu() {
         std::cout << "  14. Scale col\n";
         std::cout << "  15. Add scaled col\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 15, choice)) { delete m; return; }
+
+        if (!readIntInRange(choice, "Choice: ", 1, 15)) { delete m; return; }
 
         if (choice == 1) {
             int n;
@@ -446,9 +547,11 @@ static void squareMatrixMenu() {
             std::cout << "  Created.\n";
         }
         else if (!m) {
-            std::cout << "  [ERR] Create a matrix first.\n";
+            printError("Create a matrix first");
         }
-        else if (choice == 2) { printMatrix(*m); }
+        else if (choice == 2) {
+            printMatrix(*m);
+        }
         else if (choice == 3) {
             SquareMatrix<int> other(m->Rows());
             fillMatrix(other);
@@ -458,12 +561,15 @@ static void squareMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 4) {
             int s;
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
+            if (!readIntWithPrompt(s, "  Scalar: ")) {
+                handleInputError();
+                continue;
+            }
             auto* res = m->MultiplyByScalar(s);
             std::cout << "  Result:\n";
             printAndDelete(res);
@@ -477,7 +583,7 @@ static void squareMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 6) {
@@ -485,55 +591,86 @@ static void squareMatrixMenu() {
             std::cout << "  Transposed:\n";
             printAndDelete(res);
         }
-        else if (choice == 7) { std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n"; }
-        else if (choice == 8) { std::cout << "  Trace: " << m->Trace() << "\n"; }
-        else if (choice == 9) { std::cout << "  Determinant: " << m->Determinant() << "\n"; }
+        else if (choice == 7) {
+            std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n";
+        }
+        else if (choice == 8) {
+            std::cout << "  Trace: " << m->Trace() << "\n";
+        }
+        else if (choice == 9) {
+            std::cout << "  Determinant: " << m->Determinant() << "\n";
+        }
         else if (choice == 10) {
             int i, j;
-            std::cout << "  Row 1: "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Row 2: "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapRows(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Row 1: ", "  Row 2: ")) continue;
+            try {
+                m->SwapRows(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 11) {
             int row, s;
-            std::cout << "  Row: ";    if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleRow(row, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(row, s, "  Row: ", "  Scalar: ")) continue;
+            try {
+                m->ScaleRow(row, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 12) {
-            int target, source, s;
-            std::cout << "  Target row: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source row: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledRow(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target row: ", "  Source row: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledRow(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 13) {
             int i, j;
-            std::cout << "  Col 1: "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Col 2: "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapCols(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Col 1: ", "  Col 2: ")) continue;
+            try {
+                m->SwapCols(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 14) {
             int col, s;
-            std::cout << "  Col: ";    if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleCol(col, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(col, s, "  Col: ", "  Scalar: ")) continue;
+            try {
+                m->ScaleCol(col, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 15) {
-            int target, source, s;
-            std::cout << "  Target col: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source col: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledCol(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target col: ", "  Source col: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledCol(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
     }
 }
+
 
 static void diagonalMatrixMenu() {
     DiagonalMatrix<int>* m = nullptr;
@@ -555,7 +692,8 @@ static void diagonalMatrixMenu() {
         std::cout << "  9. Swap rows\n";
         std::cout << "  10. Scale row\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 10, choice)) { delete m; return; }
+
+        if (!readIntInRange(choice, "Choice: ", 1, 10)) { delete m; return; }
 
         if (choice == 1) {
             int n;
@@ -565,25 +703,31 @@ static void diagonalMatrixMenu() {
             std::cout << "  Enter diagonal elements:\n";
             for (int i = 0; i < n; i++) {
                 int val;
-                std::cout << "  diag[" << i << "]: ";
-                while (!readInt(val)) {
-                    std::cout << "  [ERR] Not a number.\n  diag[" << i << "]: ";
+                std::string prompt = "  diag[" + std::to_string(i) + "]: ";
+                while (!readIntWithPrompt(val, prompt)) {
+                    printError("Not a number");
+                    prompt = "  diag[" + std::to_string(i) + "]: ";
                 }
                 m->SetDiag(i, val);
             }
             std::cout << "  Created.\n";
         }
         else if (!m) {
-            std::cout << "  [ERR] Create a matrix first.\n";
+            printError("Create a matrix first");
         }
-        else if (choice == 2) { printMatrix(*m); }
+        else if (choice == 2) {
+            printMatrix(*m);
+        }
         else if (choice == 3) {
             DiagonalMatrix<int> other(m->Rows());
             std::cout << "  Enter diagonal elements of second matrix:\n";
             for (int i = 0; i < m->Rows(); i++) {
                 int val;
-                std::cout << "  diag[" << i << "]: ";
-                while (!readInt(val)) { std::cout << "  [ERR]\n  diag[" << i << "]: "; }
+                std::string prompt = "  diag[" + std::to_string(i) + "]: ";
+                while (!readIntWithPrompt(val, prompt)) {
+                    printError("Not a number");
+                    prompt = "  diag[" + std::to_string(i) + "]: ";
+                }
                 other.SetDiag(i, val);
             }
             try {
@@ -592,12 +736,15 @@ static void diagonalMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 4) {
             int s;
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
+            if (!readIntWithPrompt(s, "  Scalar: ")) {
+                handleInputError();
+                continue;
+            }
             auto* res = m->MultiplyByScalar(s);
             std::cout << "  Result:\n";
             printAndDelete(res);
@@ -607,8 +754,11 @@ static void diagonalMatrixMenu() {
             std::cout << "  Enter diagonal elements of second matrix:\n";
             for (int i = 0; i < m->Rows(); i++) {
                 int val;
-                std::cout << "  diag[" << i << "]: ";
-                while (!readInt(val)) { std::cout << "  [ERR]\n  diag[" << i << "]: "; }
+                std::string prompt = "  diag[" + std::to_string(i) + "]: ";
+                while (!readIntWithPrompt(val, prompt)) {
+                    printError("Not a number");
+                    prompt = "  diag[" + std::to_string(i) + "]: ";
+                }
                 other.SetDiag(i, val);
             }
             try {
@@ -617,7 +767,7 @@ static void diagonalMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 6) {
@@ -625,7 +775,9 @@ static void diagonalMatrixMenu() {
             std::cout << "  Transposed:\n";
             printAndDelete(res);
         }
-        else if (choice == 7) { std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n"; }
+        else if (choice == 7) {
+            std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n";
+        }
         else if (choice == 8) {
             try {
                 auto* inv = m->Inverse();
@@ -633,22 +785,30 @@ static void diagonalMatrixMenu() {
                 printAndDelete(inv);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 9) {
             int i, j;
-            std::cout << "  Row 1: "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Row 2: "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapRows(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Row 1: ", "  Row 2: ")) continue;
+            try {
+                m->SwapRows(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 10) {
             int row, s;
-            std::cout << "  Row: ";    if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleRow(row, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(row, s, "  Row: ", "  Scalar: ")) continue;
+            try {
+                m->ScaleRow(row, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
     }
 }
@@ -679,7 +839,8 @@ static void sparseMatrixMenu() {
         std::cout << "  14. Scale col\n";
         std::cout << "  15. Add scaled col\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 15, choice)) { delete m; return; }
+
+        if (!readIntInRange(choice, "Choice: ", 1, 15)) { delete m; return; }
 
         if (choice == 1) {
             int r, c;
@@ -690,44 +851,78 @@ static void sparseMatrixMenu() {
             std::cout << "  Enter non-zero elements, row=-1 to stop:\n";
             while (true) {
                 int row, col, val;
-                std::cout << "  row: "; if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
+                if (!readIntWithPrompt(row, "  row: ")) {
+                    handleInputError();
+                    continue;
+                }
                 if (row == -1) break;
-                std::cout << "  col: "; if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-                std::cout << "  val: "; if (!readInt(val)) { std::cout << "  [ERR]\n"; continue; }
-                try { m->Set(row, col, val); }
-                catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+                if (!readIntWithPrompt(col, "  col: ")) {
+                    handleInputError();
+                    continue;
+                }
+                if (!readIntWithPrompt(val, "  val: ")) {
+                    handleInputError();
+                    continue;
+                }
+                try {
+                    m->Set(row, col, val);
+                }
+                catch (const std::exception& e) {
+                    printError(e.what());
+                }
             }
         }
         else if (!m) {
-            std::cout << "  [ERR] Create a matrix first.\n";
+            printError("Create a matrix first");
         }
         else if (choice == 2) {
             int row, col, val;
-            std::cout << "  Row: ";   if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Col: ";   if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Value: "; if (!readInt(val)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->Set(row, col, val); std::cout << "  Set.\n"; }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readThreeInts(row, col, val, "  Row: ", "  Col: ", "  Value: ")) continue;
+            try {
+                m->Set(row, col, val);
+                std::cout << "  Set.\n";
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 3) {
             int row, col;
-            std::cout << "  Row: "; if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Col: "; if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-            try { std::cout << "  Value: " << m->Get(row, col) << "\n"; }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(row, col, "  Row: ", "  Col: ")) continue;
+            try {
+                std::cout << "  Value: " << m->Get(row, col) << "\n";
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
-        else if (choice == 4) { printMatrix(*m); }
+        else if (choice == 4) {
+            printMatrix(*m);
+        }
         else if (choice == 5) {
             SparseMatrix<int> other(m->Rows(), m->Cols());
             std::cout << "  Enter non-zero elements, row=-1 to stop:\n";
             while (true) {
                 int row, col, val;
-                std::cout << "  row: "; if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
+                if (!readIntWithPrompt(row, "  row: ")) {
+                    handleInputError();
+                    continue;
+                }
                 if (row == -1) break;
-                std::cout << "  col: "; if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-                std::cout << "  val: "; if (!readInt(val)) { std::cout << "  [ERR]\n"; continue; }
-                try { other.Set(row, col, val); }
-                catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+                if (!readIntWithPrompt(col, "  col: ")) {
+                    handleInputError();
+                    continue;
+                }
+                if (!readIntWithPrompt(val, "  val: ")) {
+                    handleInputError();
+                    continue;
+                }
+                try {
+                    other.Set(row, col, val);
+                }
+                catch (const std::exception& e) {
+                    printError(e.what());
+                }
             }
             try {
                 auto* res = m->Add(other);
@@ -735,12 +930,15 @@ static void sparseMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 6) {
             int s;
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
+            if (!readIntWithPrompt(s, "  Scalar: ")) {
+                handleInputError();
+                continue;
+            }
             auto* res = m->MultiplyByScalar(s);
             std::cout << "  Result:\n";
             printAndDelete(res);
@@ -750,18 +948,32 @@ static void sparseMatrixMenu() {
             std::cout << "  Second matrix dims (must be " << m->Cols() << " x ?):\n";
             if (!readMatrixDims(r, c)) continue;
             if (r != m->Cols()) {
-                std::cout << "  [ERR] Rows must equal " << m->Cols() << "\n"; continue;
+                printError("Rows must equal " + std::to_string(m->Cols()));
+                continue;
             }
             SparseMatrix<int> other(r, c);
             std::cout << "  Enter non-zero elements, row=-1 to stop:\n";
             while (true) {
                 int row, col, val;
-                std::cout << "  row: "; if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
+                if (!readIntWithPrompt(row, "  row: ")) {
+                    handleInputError();
+                    continue;
+                }
                 if (row == -1) break;
-                std::cout << "  col: "; if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-                std::cout << "  val: "; if (!readInt(val)) { std::cout << "  [ERR]\n"; continue; }
-                try { other.Set(row, col, val); }
-                catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+                if (!readIntWithPrompt(col, "  col: ")) {
+                    handleInputError();
+                    continue;
+                }
+                if (!readIntWithPrompt(val, "  val: ")) {
+                    handleInputError();
+                    continue;
+                }
+                try {
+                    other.Set(row, col, val);
+                }
+                catch (const std::exception& e) {
+                    printError(e.what());
+                }
             }
             try {
                 auto* res = m->MultiplyByMatrix(other);
@@ -769,7 +981,7 @@ static void sparseMatrixMenu() {
                 printAndDelete(res);
             }
             catch (const std::exception& e) {
-                std::cout << "  [ERR] " << e.what() << "\n";
+                printError(e.what());
             }
         }
         else if (choice == 8) {
@@ -777,50 +989,76 @@ static void sparseMatrixMenu() {
             std::cout << "  Transposed:\n";
             printAndDelete(res);
         }
-        else if (choice == 9) { std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n"; }
+        else if (choice == 9) {
+            std::cout << "  Frobenius: " << m->FrobeniusNorm() << "\n";
+        }
         else if (choice == 10) {
             int i, j;
-            std::cout << "  Row 1: "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Row 2: "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapRows(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Row 1: ", "  Row 2: ")) continue;
+            try {
+                m->SwapRows(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 11) {
             int row, s;
-            std::cout << "  Row: ";    if (!readInt(row)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleRow(row, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(row, s, "  Row: ", "  Scalar: ")) continue;
+            try {
+                m->ScaleRow(row, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 12) {
-            int target, source, s;
-            std::cout << "  Target row: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source row: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledRow(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target row: ", "  Source row: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledRow(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 13) {
             int i, j;
-            std::cout << "  Col 1: "; if (!readInt(i)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Col 2: "; if (!readInt(j)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->SwapCols(i, j); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(i, j, "  Col 1: ", "  Col 2: ")) continue;
+            try {
+                m->SwapCols(i, j);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 14) {
             int col, s;
-            std::cout << "  Col: ";    if (!readInt(col)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: "; if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->ScaleCol(col, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            if (!readTwoInts(col, s, "  Col: ", "  Scalar: ")) continue;
+            try {
+                m->ScaleCol(col, s);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
         else if (choice == 15) {
-            int target, source, s;
-            std::cout << "  Target col: "; if (!readInt(target)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Source col: "; if (!readInt(source)) { std::cout << "  [ERR]\n"; continue; }
-            std::cout << "  Scalar: ";     if (!readInt(s)) { std::cout << "  [ERR]\n"; continue; }
-            try { m->AddScaledCol(target, source, s); printMatrix(*m); }
-            catch (const std::exception& e) { std::cout << "  [ERR] " << e.what() << "\n"; }
+            int target, source, scalar;
+            if (!readThreeInts(target, source, scalar,
+                "  Target col: ", "  Source col: ", "  Scalar: ")) continue;
+            try {
+                m->AddScaledCol(target, source, scalar);
+                printMatrix(*m);
+            }
+            catch (const std::exception& e) {
+                printError(e.what());
+            }
         }
     }
 }
@@ -835,11 +1073,15 @@ static void matrixMenu() {
         std::cout << "  3. Diagonal Matrix\n";
         std::cout << "  4. Sparse Matrix\n";
         std::cout << "  0. Back\n";
-        if (!menu("Choice: ", 1, 4, choice)) return;
-        if (choice == 1) rectangularMatrixMenu();
-        else if (choice == 2) squareMatrixMenu();
-        else if (choice == 3) diagonalMatrixMenu();
-        else if (choice == 4) sparseMatrixMenu();
+
+        if (!readIntInRange(choice, "Choice: ", 1, 4)) return;
+
+        switch (choice) {
+        case 1: rectangularMatrixMenu(); break;
+        case 2: squareMatrixMenu(); break;
+        case 3: diagonalMatrixMenu(); break;
+        case 4: sparseMatrixMenu(); break;
+        }
     }
 }
 
@@ -853,13 +1095,17 @@ int main() {
         std::cout << "  3. Hanoi Tower\n";
         std::cout << "  4. Matrices\n";
         std::cout << "  0. Exit\n";
-        if (!menu("Choice: ", 1, 4, choice)) {
+
+        if (!readIntInRange(choice, "Choice: ", 1, 4)) {
             std::cout << "  Goodbye.\n";
             return 0;
         }
-        if (choice == 1) stackMenu();
-        else if (choice == 2) queueMenu();
-        else if (choice == 3) hanoiMenu();
-        else if (choice == 4) matrixMenu();
+
+        switch (choice) {
+        case 1: stackMenu(); break;
+        case 2: queueMenu(); break;
+        case 3: hanoiMenu(); break;
+        case 4: matrixMenu(); break;
+        }
     }
 }
