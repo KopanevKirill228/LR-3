@@ -25,10 +25,13 @@ void Queue<T>::Enqueue(const T& item) {
 
 template <typename T>
 T Queue<T>::Dequeue() {
-    if (IsEmpty())
+    if (IsEmpty()) {
         throw std::out_of_range("Dequeue from empty queue");
-    T value = std::move(seq_.Get(0));
+    }
+
+    T value = seq_.Get(0);
     seq_.RemoveFirst();
+
     return value;
 }
 
