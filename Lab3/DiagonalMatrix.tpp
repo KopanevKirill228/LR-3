@@ -1,4 +1,5 @@
 #pragma once
+
 #include "DiagonalMatrix.h"
 #include <stdexcept>
 #include <cmath>

@@ -91,7 +91,6 @@ void ArraySequence<T>::InsertAtInternal(const T& item, int index) {
     ++size_;
 }
 
-
 template <typename T>
 void ArraySequence<T>::SetInternal(int index, const T& value) {
     if (index < 0 || index >= size_)
@@ -146,9 +145,9 @@ Sequence<T>* ArraySequence<T>::Concat(const Sequence<T>& other) const {
     for (int i = 0; i < size_; ++i)
         result->AppendInternal(items_.Get(i));
 
-    auto* en = other.get_enumerator();
-    while (en->move_next())
-        result->AppendInternal(en->get_current());
+    auto* en = other.GetEnumerator();
+    while (en->MoveNext())
+        result->AppendInternal(en->GetCurrent());
     delete en;
 
     return result;
@@ -178,6 +177,7 @@ template <class T>
 MutableArraySequence<T>::MutableArraySequence(const MutableArraySequence<T>& other)
     : ArraySequence<T>(other) {}
 
+
 template <typename T>
 void MutableArraySequence<T>::Set(int index, const T& value) {
     this->SetInternal(index, value);
@@ -195,7 +195,6 @@ template <class T>
 ArraySequence<T>* MutableArraySequence<T>::Clone() const {
     return new MutableArraySequence<T>(*this);
 }
-
 
 // ImmutableArraySequence
 
@@ -240,9 +239,9 @@ typename MutableArraySequence<T>::Builder& MutableArraySequence<T>::Builder::App
 
 template <class T>
 typename MutableArraySequence<T>::Builder& MutableArraySequence<T>::Builder::AppendSequence(const Sequence<T>& other) {
-    auto* en = other.get_enumerator();
-    while (en->move_next())
-        seq_->AppendInternal(en->get_current());
+    auto* en = other.GetEnumerator();
+    while (en->MoveNext())
+        seq_->AppendInternal(en->GetCurrent());
     delete en;
     return *this;
 }

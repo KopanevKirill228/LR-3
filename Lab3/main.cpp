@@ -59,9 +59,16 @@ static void printMatrix(const IMatrix<int>& m) {
 }
 
 static void printAndDelete(IMatrix<int>* res) {
-    if (res) {
-        printMatrix(*res);
+    try {
+        if (res) {
+            printMatrix(*res);
+        }
+
         delete res;
+    }
+    catch (...) {
+        delete res;
+        throw;
     }
 }
 

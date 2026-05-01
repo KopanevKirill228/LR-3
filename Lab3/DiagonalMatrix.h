@@ -1,4 +1,5 @@
 #pragma once
+
 #include "IMatrix.h"
 #include "lib/ArraySequence.h"
 

@@ -2,9 +2,8 @@
 
 #include <stdexcept>
 #include "Sequence.h"
-#include "Linked_List.h"
-#include "ienumerator.h"
-#include "MapReduce.h" 
+#include "LinkedList.h"
+#include "IEnumerator.h"
 
 template <class T>
 class ListSequence : public Sequence<T> {
@@ -29,31 +28,8 @@ public:
     T operator[](int index) const override; // это можно бы и убрать. O(n) операция. но оно особо не мешает поэтому оставлю
     Sequence<T>* operator+(const Sequence<T>& other) const override;
 
-
-    class Enumerator : public IEnumerator<T> {
-    private:
-        const ListSequence<T>* seq_;
-        int index_;
-    public:
-        Enumerator(const ListSequence<T>* seq) : seq_(seq), index_(-1) {}
-
-        bool move_next() override {
-            index_++;
-            return index_ < seq_->GetLength();
-        }
-
-        const T& get_current() const override {
-            if (index_ < 0 || index_ >= seq_->GetLength()) {
-                throw std::out_of_range("Enumerator is out of range");
-            }
-            return seq_->Get(index_);
-        }
-
-        void reset() override { index_ = -1; }
-    };
-
-    IEnumerator<T>* get_enumerator() const override {
-        return new Enumerator(this);
+    IEnumerator<T>* GetEnumerator() const override {
+        return items_.GetEnumerator();
     }
 
 
@@ -79,21 +55,6 @@ public:
 
     void RemoveFirst();
 
-    Sequence<T>* Map(std::function<T(const T&)> f) const {
-        return ::Map<T, T>(this, f);
-    }
-
-    Sequence<T>* Where(std::function<bool(const T&)> pred) const {
-        return ::Where<T>(this, pred);
-    }
-
-    T Reduce(std::function<T(const T&, const T&)> f, const T& init) const {
-        return ::Reduce<T, T>(this, [&](const T& acc, const T& x) {
-            return f(acc, x);
-            }, init);
-    }
-
-    // вложенный Builder
     class Builder {
     private:
         MutableListSequence<T>* seq_;

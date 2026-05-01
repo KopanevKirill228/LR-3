@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "Stack.h"
 #include "lib/ArraySequence.h"
 #include <string>

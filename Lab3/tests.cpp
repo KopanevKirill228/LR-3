@@ -187,71 +187,6 @@ void test_Queue_SingleElement() {
     }
 }
 
-// Queue sequence
-void test_Queue_Sequence_Map() {
-    SUITE("Queue: GetSequence()->Map");
-    {
-        Queue<int> q;
-        q.Enqueue(1); q.Enqueue(2); q.Enqueue(3);
-        auto* seq = q.GetSequence()->Map([](const int& x) { return x * 2; });
-        CHECK("map count", seq->GetLength() == 3);
-        CHECK("map Get(0)", seq->Get(0) == 2);
-        CHECK("map Get(1)", seq->Get(1) == 4);
-        CHECK("map Get(2)", seq->Get(2) == 6);
-        delete seq;
-    }
-    {
-        Queue<int> q; // пустая очередь
-        auto* seq = q.GetSequence()->Map([](const int& x) { return x * 2; });
-        CHECK("map on empty queue", seq->GetLength() == 0);
-        delete seq;
-    }
-}
-
-void test_Queue_Sequence_Where() {
-    SUITE("Queue: GetSequence()->Where");
-    {
-        Queue<int> q;
-        q.Enqueue(1); q.Enqueue(2); q.Enqueue(3); q.Enqueue(4);
-        auto* seq = q.GetSequence()->Where([](const int& x) { return x % 2 == 0; });
-        CHECK("where count", seq->GetLength() == 2);
-        CHECK("where Get(0)", seq->Get(0) == 2);
-        CHECK("where Get(1)", seq->Get(1) == 4);
-        delete seq;
-    }
-    {
-        Queue<int> q;
-        q.Enqueue(1); q.Enqueue(3);
-        auto* seq = q.GetSequence()->Where([](const int& x) { return x % 2 == 0; });
-        CHECK("where none match returns empty", seq->GetLength() == 0);
-        delete seq;
-    }
-}
-
-void test_Queue_Sequence_Reduce() {
-    SUITE("Queue: GetSequence()->Reduce");
-    {
-        Queue<int> q;
-        q.Enqueue(1); q.Enqueue(2); q.Enqueue(3); q.Enqueue(4);
-        int sum = q.GetSequence()->Reduce(
-            [](const int& acc, const int& x) { return acc + x; }, 0);
-        CHECK("reduce sum", sum == 10);
-    }
-    {
-        Queue<int> q;
-        q.Enqueue(5);
-        int sum = q.GetSequence()->Reduce(
-            [](const int& acc, const int& x) { return acc + x; }, 0);
-        CHECK("reduce single element", sum == 5);
-    }
-    {
-        Queue<int> q;
-        int sum = q.GetSequence()->Reduce(
-            [](const int& acc, const int& x) { return acc + x; }, 0);
-        CHECK("reduce empty returns initial", sum == 0);
-    }
-}
-
 // Collection operators
 void test_CollectionOperators_Equality() {
     SUITE("CollectionOperators: == and !=");
@@ -752,6 +687,196 @@ void test_SparseMatrix_RowColOps() {
     }
 }
 
+// Exception tests
+void test_ExceptionTests() {
+    SUITE("Exception tests");
+
+    // Stack
+    {
+        Stack<int> s;
+
+        CHECK_THROWS("Stack Pop from empty throws", s.Pop());
+        CHECK_THROWS("Stack Peek from empty throws", s.Peek());
+        CHECK_THROWS("Stack Get from empty throws", s.Get(0));
+    }
+
+    {
+        Stack<int> s;
+        s.Push(1);
+
+        CHECK_THROWS("Stack Get negative index throws", s.Get(-1));
+        CHECK_THROWS("Stack Get high index throws", s.Get(1));
+    }
+
+    // Queue
+    {
+        Queue<int> q;
+
+        CHECK_THROWS("Queue Dequeue from empty throws", q.Dequeue());
+        CHECK_THROWS("Queue PeekFront from empty throws", q.PeekFront());
+        CHECK_THROWS("Queue PeekBack from empty throws", q.PeekBack());
+        CHECK_THROWS("Queue Get from empty throws", q.Get(0));
+    }
+
+    {
+        Queue<int> q;
+        q.Enqueue(10);
+
+        CHECK_THROWS("Queue Get negative index throws", q.Get(-1));
+        CHECK_THROWS("Queue Get high index throws", q.Get(1));
+    }
+
+    // RectangularMatrix
+    {
+        CHECK_THROWS("RectangularMatrix zero rows throws", RectangularMatrix<int>(0, 2));
+        CHECK_THROWS("RectangularMatrix zero cols throws", RectangularMatrix<int>(2, 0));
+        CHECK_THROWS("RectangularMatrix negative rows throws", RectangularMatrix<int>(-1, 2));
+        CHECK_THROWS("RectangularMatrix negative cols throws", RectangularMatrix<int>(2, -1));
+        CHECK_THROWS("RectangularMatrix null data throws", RectangularMatrix<int>(2, 2, nullptr));
+    }
+
+    {
+        RectangularMatrix<int> m(2, 3);
+
+        CHECK_THROWS("RectangularMatrix Get negative row throws", m.Get(-1, 0));
+        CHECK_THROWS("RectangularMatrix Get negative col throws", m.Get(0, -1));
+        CHECK_THROWS("RectangularMatrix Get bad row throws", m.Get(2, 0));
+        CHECK_THROWS("RectangularMatrix Get bad col throws", m.Get(0, 3));
+
+        CHECK_THROWS("RectangularMatrix Set negative row throws", m.Set(-1, 0, 5));
+        CHECK_THROWS("RectangularMatrix Set negative col throws", m.Set(0, -1, 5));
+        CHECK_THROWS("RectangularMatrix Set bad row throws", m.Set(2, 0, 5));
+        CHECK_THROWS("RectangularMatrix Set bad col throws", m.Set(0, 3, 5));
+
+        CHECK_THROWS("RectangularMatrix SwapRows bad index throws", m.SwapRows(0, 2));
+        CHECK_THROWS("RectangularMatrix SwapCols bad index throws", m.SwapCols(0, 3));
+
+        CHECK_THROWS("RectangularMatrix ScaleRow bad index throws", m.ScaleRow(2, 3));
+        CHECK_THROWS("RectangularMatrix ScaleCol bad index throws", m.ScaleCol(3, 3));
+
+        CHECK_THROWS("RectangularMatrix AddScaledRow bad target throws", m.AddScaledRow(2, 0, 3));
+        CHECK_THROWS("RectangularMatrix AddScaledRow bad source throws", m.AddScaledRow(0, 2, 3));
+
+        CHECK_THROWS("RectangularMatrix AddScaledCol bad target throws", m.AddScaledCol(3, 0, 3));
+        CHECK_THROWS("RectangularMatrix AddScaledCol bad source throws", m.AddScaledCol(0, 3, 3));
+    }
+
+    {
+        RectangularMatrix<int> a(2, 3);
+        RectangularMatrix<int> b(3, 2);
+        RectangularMatrix<int> c(4, 4);
+
+        CHECK_THROWS("RectangularMatrix Add incompatible sizes throws", a.Add(b));
+        CHECK_THROWS("RectangularMatrix Multiply incompatible sizes throws", a.MultiplyByMatrix(c));
+    }
+
+    // SquareMatrix
+    {
+        CHECK_THROWS("SquareMatrix zero size throws", SquareMatrix<int>(0));
+        CHECK_THROWS("SquareMatrix negative size throws", SquareMatrix<int>(-1));
+        CHECK_THROWS("SquareMatrix null data throws", SquareMatrix<int>(2, nullptr));
+    }
+
+    // DiagonalMatrix
+    {
+        CHECK_THROWS("DiagonalMatrix zero size throws", DiagonalMatrix<int>(0));
+        CHECK_THROWS("DiagonalMatrix negative size throws", DiagonalMatrix<int>(-1));
+        CHECK_THROWS("DiagonalMatrix null data throws", DiagonalMatrix<int>(3, nullptr));
+    }
+
+    {
+        DiagonalMatrix<int> m(3);
+
+        CHECK_THROWS("DiagonalMatrix Get negative row throws", m.Get(-1, 0));
+        CHECK_THROWS("DiagonalMatrix Get negative col throws", m.Get(0, -1));
+        CHECK_THROWS("DiagonalMatrix Get bad row throws", m.Get(3, 0));
+        CHECK_THROWS("DiagonalMatrix Get bad col throws", m.Get(0, 3));
+
+        CHECK_THROWS("DiagonalMatrix Set negative row throws", m.Set(-1, 0, 5));
+        CHECK_THROWS("DiagonalMatrix Set negative col throws", m.Set(0, -1, 5));
+        CHECK_THROWS("DiagonalMatrix Set bad row throws", m.Set(3, 0, 5));
+        CHECK_THROWS("DiagonalMatrix Set bad col throws", m.Set(0, 3, 5));
+
+        CHECK_THROWS("DiagonalMatrix Set non-zero off diagonal throws", m.Set(0, 1, 5));
+
+        CHECK_THROWS("DiagonalMatrix GetDiag negative index throws", m.GetDiag(-1));
+        CHECK_THROWS("DiagonalMatrix GetDiag high index throws", m.GetDiag(3));
+
+        CHECK_THROWS("DiagonalMatrix SetDiag negative index throws", m.SetDiag(-1, 5));
+        CHECK_THROWS("DiagonalMatrix SetDiag high index throws", m.SetDiag(3, 5));
+
+        CHECK_THROWS("DiagonalMatrix SwapRows bad index throws", m.SwapRows(0, 3));
+        CHECK_THROWS("DiagonalMatrix SwapCols bad index throws", m.SwapCols(0, 3));
+
+        CHECK_THROWS("DiagonalMatrix ScaleRow bad index throws", m.ScaleRow(3, 2));
+        CHECK_THROWS("DiagonalMatrix ScaleCol bad index throws", m.ScaleCol(3, 2));
+
+        CHECK_THROWS("DiagonalMatrix AddScaledRow bad target throws", m.AddScaledRow(3, 0, 2));
+        CHECK_THROWS("DiagonalMatrix AddScaledRow bad source throws", m.AddScaledRow(0, 3, 2));
+
+        CHECK_THROWS("DiagonalMatrix AddScaledCol bad target throws", m.AddScaledCol(3, 0, 2));
+        CHECK_THROWS("DiagonalMatrix AddScaledCol bad source throws", m.AddScaledCol(0, 3, 2));
+    }
+
+    {
+        DiagonalMatrix<int> a(2);
+        DiagonalMatrix<int> b(3);
+
+        CHECK_THROWS("DiagonalMatrix Add incompatible sizes throws", a.Add(b));
+        CHECK_THROWS("DiagonalMatrix MultiplyDiagonal incompatible sizes throws", a.MultiplyDiagonal(b));
+    }
+
+    {
+        int d[] = { 0, 1 };
+        DiagonalMatrix<int> m(2, d);
+
+        CHECK_THROWS("DiagonalMatrix inverse with zero diagonal throws", m.Inverse());
+    }
+
+    // SparseMatrix
+    {
+        CHECK_THROWS("SparseMatrix zero rows throws", SparseMatrix<int>(0, 2));
+        CHECK_THROWS("SparseMatrix zero cols throws", SparseMatrix<int>(2, 0));
+        CHECK_THROWS("SparseMatrix negative rows throws", SparseMatrix<int>(-1, 2));
+        CHECK_THROWS("SparseMatrix negative cols throws", SparseMatrix<int>(2, -1));
+    }
+
+    {
+        SparseMatrix<int> m(2, 3);
+
+        CHECK_THROWS("SparseMatrix Get negative row throws", m.Get(-1, 0));
+        CHECK_THROWS("SparseMatrix Get negative col throws", m.Get(0, -1));
+        CHECK_THROWS("SparseMatrix Get bad row throws", m.Get(2, 0));
+        CHECK_THROWS("SparseMatrix Get bad col throws", m.Get(0, 3));
+
+        CHECK_THROWS("SparseMatrix Set negative row throws", m.Set(-1, 0, 5));
+        CHECK_THROWS("SparseMatrix Set negative col throws", m.Set(0, -1, 5));
+        CHECK_THROWS("SparseMatrix Set bad row throws", m.Set(2, 0, 5));
+        CHECK_THROWS("SparseMatrix Set bad col throws", m.Set(0, 3, 5));
+
+        CHECK_THROWS("SparseMatrix SwapRows bad index throws", m.SwapRows(0, 2));
+        CHECK_THROWS("SparseMatrix SwapCols bad index throws", m.SwapCols(0, 3));
+
+        CHECK_THROWS("SparseMatrix ScaleRow bad index throws", m.ScaleRow(2, 3));
+        CHECK_THROWS("SparseMatrix ScaleCol bad index throws", m.ScaleCol(3, 3));
+
+        CHECK_THROWS("SparseMatrix AddScaledRow bad target throws", m.AddScaledRow(2, 0, 3));
+        CHECK_THROWS("SparseMatrix AddScaledRow bad source throws", m.AddScaledRow(0, 2, 3));
+
+        CHECK_THROWS("SparseMatrix AddScaledCol bad target throws", m.AddScaledCol(3, 0, 3));
+        CHECK_THROWS("SparseMatrix AddScaledCol bad source throws", m.AddScaledCol(0, 3, 3));
+    }
+
+    {
+        SparseMatrix<int> a(2, 3);
+        SparseMatrix<int> b(3, 2);
+        SparseMatrix<int> c(4, 4);
+
+        CHECK_THROWS("SparseMatrix Add incompatible sizes throws", a.Add(b));
+        CHECK_THROWS("SparseMatrix Multiply incompatible sizes throws", a.MultiplyByMatrix(c));
+    }
+}
+
 void run_all_tests() {
     // Stack
     test_Stack_PushPeekPop();
@@ -767,11 +892,6 @@ void run_all_tests() {
     test_Queue_Get();
     test_Queue_Concat();
     test_Queue_SingleElement();
-
-    // Queue sequence
-    test_Queue_Sequence_Map();
-    test_Queue_Sequence_Where();
-    test_Queue_Sequence_Reduce();
 
     // Collection operators
     test_CollectionOperators_Equality();
@@ -811,6 +931,9 @@ void run_all_tests() {
     test_SparseMatrix_Transpose();
     test_SparseMatrix_FrobeniusNorm();
     test_SparseMatrix_RowColOps();
+
+    // Exception tests
+    test_ExceptionTests();
 
     std::cout << "\n=== RESULTS: "
         << (total - failed) << "/" << total << " passed";
