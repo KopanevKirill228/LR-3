@@ -9,6 +9,7 @@
 #include "SquareMatrix.h"
 #include "DiagonalMatrix.h"
 #include "SparseMatrix.h"
+#include "NaturalNumberAlgorithms.h"
 
 static void clearInput() {
     std::cin.clear();
@@ -56,6 +57,25 @@ static void printMatrix(const IMatrix<int>& m) {
             std::cout << m.Get(i, j) << "\t";
         std::cout << "\n";
     }
+}
+
+static void printIntSequence(const Sequence<int>* seq) {
+    if (seq == nullptr) {
+        std::cout << "  null\n";
+        return;
+    }
+
+    std::cout << "  [";
+
+    for (int i = 0; i < seq->GetLength(); ++i) {
+        if (i > 0) {
+            std::cout << ", ";
+        }
+
+        std::cout << seq->Get(i);
+    }
+
+    std::cout << "]\n";
 }
 
 static void printAndDelete(IMatrix<int>* res) {
@@ -1092,6 +1112,144 @@ static void matrixMenu() {
     }
 }
 
+static void naturalNumberAlgorithmsMenu() {
+    int choice;
+
+    while (true) {
+        printSeparator();
+        std::cout << "  Natural Number Algorithms\n";
+        std::cout << "  1. Range [low, high]\n";
+        std::cout << "  2. Check prime\n";
+        std::cout << "  3. Get divisors\n";
+        std::cout << "  4. Get primes in range\n";
+        std::cout << "  5. Get prime factors\n";
+        std::cout << "  6. Sieve of Eratosthenes\n";
+        std::cout << "  0. Back\n";
+
+        if (!readIntInRange(choice, "Choice: ", 1, 6)) {
+            return;
+        }
+
+        try {
+            if (choice == 1) {
+                int low, high;
+
+                if (!readTwoInts(low, high, "  Low: ", "  High: ")) {
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = Range(low, high);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 2) {
+                int n;
+
+                if (!readIntWithPrompt(n, "  Number: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                if (IsPrime(n)) {
+                    std::cout << "  Prime\n";
+                }
+                else {
+                    std::cout << "  Not prime\n";
+                }
+            }
+            else if (choice == 3) {
+                int n;
+
+                if (!readIntWithPrompt(n, "  Number: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = GetDivisors(n);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 4) {
+                int low, high;
+
+                if (!readTwoInts(low, high, "  Low: ", "  High: ")) {
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = GetPrimes(low, high);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 5) {
+                int n;
+
+                if (!readIntWithPrompt(n, "  Number: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = GetPrimeFactors(n);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 6) {
+                int low, high;
+
+                if (!readTwoInts(low, high, "  Low: ", "  High: ")) {
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = SieveOfEratosthenes(low, high);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+        }
+        catch (const std::exception& e) {
+            printError(e.what());
+        }
+    }
+}
+
 int main() {
     int choice;
     while (true) {
@@ -1101,9 +1259,10 @@ int main() {
         std::cout << "  2. Queue\n";
         std::cout << "  3. Hanoi Tower\n";
         std::cout << "  4. Matrices\n";
+        std::cout << "  5. Natural Number Algorithms\n";
         std::cout << "  0. Exit\n";
 
-        if (!readIntInRange(choice, "Choice: ", 1, 4)) {
+        if (!readIntInRange(choice, "Choice: ", 1, 5)) {
             std::cout << "  Goodbye.\n";
             return 0;
         }
@@ -1113,6 +1272,7 @@ int main() {
         case 2: queueMenu(); break;
         case 3: hanoiMenu(); break;
         case 4: matrixMenu(); break;
+        case 5: naturalNumberAlgorithmsMenu(); break;
         }
     }
 }

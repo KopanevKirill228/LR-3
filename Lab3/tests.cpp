@@ -9,6 +9,7 @@
 #include "DiagonalMatrix.h"
 #include "SparseMatrix.h"
 #include "MatrixOperators.h"
+#include "NaturalNumberAlgorithms.h"
 
 static int total = 0;
 static int failed = 0;
@@ -877,6 +878,186 @@ void test_ExceptionTests() {
     }
 }
 
+// Natural number algorithms
+void test_NaturalNumberAlgorithms() {
+    SUITE("NaturalNumberAlgorithms: Range");
+
+    {
+        Sequence<int>* seq = Range(1, 5);
+
+        CHECK("Range length", seq->GetLength() == 5);
+        CHECK("Range first", seq->Get(0) == 1);
+        CHECK("Range middle", seq->Get(2) == 3);
+        CHECK("Range last", seq->Get(4) == 5);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = Range(3, 3);
+
+        CHECK("Range single length", seq->GetLength() == 1);
+        CHECK("Range single value", seq->Get(0) == 3);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = Range(-2, 2);
+
+        CHECK("Range negative length", seq->GetLength() == 5);
+        CHECK("Range negative first", seq->Get(0) == -2);
+        CHECK("Range negative last", seq->Get(4) == 2);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("Range low greater than high throws", Range(5, 1));
+
+
+    SUITE("NaturalNumberAlgorithms: IsPrime");
+
+    CHECK("IsPrime 0 false", !IsPrime(0));
+    CHECK("IsPrime 1 false", !IsPrime(1));
+    CHECK("IsPrime 2 true", IsPrime(2));
+    CHECK("IsPrime 3 true", IsPrime(3));
+    CHECK("IsPrime 4 false", !IsPrime(4));
+    CHECK("IsPrime 17 true", IsPrime(17));
+    CHECK("IsPrime 25 false", !IsPrime(25));
+    CHECK("IsPrime negative false", !IsPrime(-7));
+
+
+    SUITE("NaturalNumberAlgorithms: GetDivisors");
+
+    {
+        Sequence<int>* seq = GetDivisors(12);
+
+        CHECK("GetDivisors length", seq->GetLength() == 6);
+        CHECK("GetDivisors 1", seq->Get(0) == 1);
+        CHECK("GetDivisors 2", seq->Get(1) == 2);
+        CHECK("GetDivisors 3", seq->Get(2) == 3);
+        CHECK("GetDivisors 4", seq->Get(3) == 4);
+        CHECK("GetDivisors 6", seq->Get(4) == 6);
+        CHECK("GetDivisors 12", seq->Get(5) == 12);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = GetDivisors(1);
+
+        CHECK("GetDivisors one length", seq->GetLength() == 1);
+        CHECK("GetDivisors one value", seq->Get(0) == 1);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("GetDivisors zero throws", GetDivisors(0));
+    CHECK_THROWS("GetDivisors negative throws", GetDivisors(-10));
+
+
+    SUITE("NaturalNumberAlgorithms: GetPrimes");
+
+    {
+        Sequence<int>* seq = GetPrimes(1, 10);
+
+        CHECK("GetPrimes length", seq->GetLength() == 4);
+        CHECK("GetPrimes 2", seq->Get(0) == 2);
+        CHECK("GetPrimes 3", seq->Get(1) == 3);
+        CHECK("GetPrimes 5", seq->Get(2) == 5);
+        CHECK("GetPrimes 7", seq->Get(3) == 7);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = GetPrimes(14, 16);
+
+        CHECK("GetPrimes empty range length", seq->GetLength() == 0);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("GetPrimes invalid range throws", GetPrimes(10, 1));
+
+
+    SUITE("NaturalNumberAlgorithms: GetPrimeFactors");
+
+    {
+        Sequence<int>* seq = GetPrimeFactors(60);
+
+        CHECK("GetPrimeFactors 60 length", seq->GetLength() == 4);
+        CHECK("GetPrimeFactors 60 factor 0", seq->Get(0) == 2);
+        CHECK("GetPrimeFactors 60 factor 1", seq->Get(1) == 2);
+        CHECK("GetPrimeFactors 60 factor 2", seq->Get(2) == 3);
+        CHECK("GetPrimeFactors 60 factor 3", seq->Get(3) == 5);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = GetPrimeFactors(13);
+
+        CHECK("GetPrimeFactors prime length", seq->GetLength() == 1);
+        CHECK("GetPrimeFactors prime value", seq->Get(0) == 13);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = GetPrimeFactors(64);
+
+        CHECK("GetPrimeFactors power length", seq->GetLength() == 6);
+        for (int i = 0; i < seq->GetLength(); ++i) {
+            CHECK("GetPrimeFactors power all twos", seq->Get(i) == 2);
+        }
+
+        delete seq;
+    }
+
+    CHECK_THROWS("GetPrimeFactors one throws", GetPrimeFactors(1));
+    CHECK_THROWS("GetPrimeFactors negative throws", GetPrimeFactors(-20));
+
+
+    SUITE("NaturalNumberAlgorithms: SieveOfEratosthenes");
+
+    {
+        Sequence<int>* seq = SieveOfEratosthenes(1, 20);
+
+        CHECK("Sieve length", seq->GetLength() == 8);
+        CHECK("Sieve 2", seq->Get(0) == 2);
+        CHECK("Sieve 3", seq->Get(1) == 3);
+        CHECK("Sieve 5", seq->Get(2) == 5);
+        CHECK("Sieve 7", seq->Get(3) == 7);
+        CHECK("Sieve 11", seq->Get(4) == 11);
+        CHECK("Sieve 13", seq->Get(5) == 13);
+        CHECK("Sieve 17", seq->Get(6) == 17);
+        CHECK("Sieve 19", seq->Get(7) == 19);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = SieveOfEratosthenes(14, 16);
+
+        CHECK("Sieve empty range length", seq->GetLength() == 0);
+
+        delete seq;
+    }
+
+    {
+        Sequence<int>* seq = SieveOfEratosthenes(-5, 3);
+
+        CHECK("Sieve negative low length", seq->GetLength() == 2);
+        CHECK("Sieve negative low first", seq->Get(0) == 2);
+        CHECK("Sieve negative low second", seq->Get(1) == 3);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("Sieve invalid range throws", SieveOfEratosthenes(10, 1));
+}
+
 void run_all_tests() {
     // Stack
     test_Stack_PushPeekPop();
@@ -934,6 +1115,9 @@ void run_all_tests() {
 
     // Exception tests
     test_ExceptionTests();
+
+    // Natural number algorithms
+    test_NaturalNumberAlgorithms();
 
     std::cout << "\n=== RESULTS: "
         << (total - failed) << "/" << total << " passed";
