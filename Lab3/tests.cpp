@@ -10,6 +10,7 @@
 #include "SparseMatrix.h"
 #include "MatrixOperators.h"
 #include "NaturalNumberAlgorithms.h"
+#include "RecurrenceAlgorithms.h"
 
 static int total = 0;
 static int failed = 0;
@@ -1058,6 +1059,92 @@ void test_NaturalNumberAlgorithms() {
     CHECK_THROWS("Sieve invalid range throws", SieveOfEratosthenes(10, 1));
 }
 
+void test_RecurrenceAlgorithms() {
+    SUITE("RecurrenceAlgorithms: Factorials");
+
+    {
+        Sequence<int>* seq = Factorials(6);
+
+        CHECK("Factorials length", seq->GetLength() == 6);
+        CHECK("0!", seq->Get(0) == 1);
+        CHECK("1!", seq->Get(1) == 1);
+        CHECK("2!", seq->Get(2) == 2);
+        CHECK("3!", seq->Get(3) == 6);
+        CHECK("4!", seq->Get(4) == 24);
+        CHECK("5!", seq->Get(5) == 120);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("Factorials negative count throws", Factorials(-1));
+
+
+    SUITE("RecurrenceAlgorithms: Fibonacci");
+
+    {
+        Sequence<int>* seq = Fibonacci(7);
+
+        CHECK("Fibonacci length", seq->GetLength() == 7);
+        CHECK("fib 0", seq->Get(0) == 0);
+        CHECK("fib 1", seq->Get(1) == 1);
+        CHECK("fib 2", seq->Get(2) == 1);
+        CHECK("fib 3", seq->Get(3) == 2);
+        CHECK("fib 4", seq->Get(4) == 3);
+        CHECK("fib 5", seq->Get(5) == 5);
+        CHECK("fib 6", seq->Get(6) == 8);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("Fibonacci negative count throws", Fibonacci(-1));
+
+
+    SUITE("RecurrenceAlgorithms: LinearRecurrence");
+
+    {
+        int cData[] = { 1, 1 };
+        int initData[] = { 0, 1 };
+
+        MutableArraySequence<int> coefficients(cData, 2);
+        MutableArraySequence<int> initialValues(initData, 2);
+
+        Sequence<int>* seq = LinearRecurrence(&coefficients, &initialValues, 7);
+
+        CHECK("LinearRecurrence Fibonacci length", seq->GetLength() == 7);
+        CHECK("LinearRecurrence fib 0", seq->Get(0) == 0);
+        CHECK("LinearRecurrence fib 1", seq->Get(1) == 1);
+        CHECK("LinearRecurrence fib 2", seq->Get(2) == 1);
+        CHECK("LinearRecurrence fib 3", seq->Get(3) == 2);
+        CHECK("LinearRecurrence fib 4", seq->Get(4) == 3);
+        CHECK("LinearRecurrence fib 5", seq->Get(5) == 5);
+        CHECK("LinearRecurrence fib 6", seq->Get(6) == 8);
+
+        delete seq;
+    }
+
+    {
+        int cData[] = { 2 };
+        int initData[] = { 1 };
+
+        MutableArraySequence<int> coefficients(cData, 1);
+        MutableArraySequence<int> initialValues(initData, 1);
+
+        Sequence<int>* seq = LinearRecurrence(&coefficients, &initialValues, 5);
+
+        CHECK("LinearRecurrence order 1 length", seq->GetLength() == 5);
+        CHECK("LinearRecurrence order 1 x0", seq->Get(0) == 1);
+        CHECK("LinearRecurrence order 1 x1", seq->Get(1) == 2);
+        CHECK("LinearRecurrence order 1 x2", seq->Get(2) == 4);
+        CHECK("LinearRecurrence order 1 x3", seq->Get(3) == 8);
+        CHECK("LinearRecurrence order 1 x4", seq->Get(4) == 16);
+
+        delete seq;
+    }
+
+    CHECK_THROWS("LinearRecurrence null coefficients throws",
+        LinearRecurrence(nullptr, nullptr, 5));
+}
+
 void run_all_tests() {
     // Stack
     test_Stack_PushPeekPop();
@@ -1118,6 +1205,9 @@ void run_all_tests() {
 
     // Natural number algorithms
     test_NaturalNumberAlgorithms();
+
+    // Recurrence algorithms
+    test_RecurrenceAlgorithms();
 
     std::cout << "\n=== RESULTS: "
         << (total - failed) << "/" << total << " passed";

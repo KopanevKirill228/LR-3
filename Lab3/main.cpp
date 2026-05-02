@@ -10,6 +10,7 @@
 #include "DiagonalMatrix.h"
 #include "SparseMatrix.h"
 #include "NaturalNumberAlgorithms.h"
+#include "RecurrenceAlgorithms.h"
 
 static void clearInput() {
     std::cin.clear();
@@ -1250,6 +1251,138 @@ static void naturalNumberAlgorithmsMenu() {
     }
 }
 
+static void recurrenceAlgorithmsMenu() {
+    int choice;
+
+    while (true) {
+        printSeparator();
+        std::cout << "  Recurrence Algorithms\n";
+        std::cout << "  1. Factorials\n";
+        std::cout << "  2. Fibonacci\n";
+        std::cout << "  3. Linear recurrence\n";
+        std::cout << "  0. Back\n";
+
+        if (!readIntInRange(choice, "Choice: ", 1, 3)) {
+            return;
+        }
+
+        try {
+            if (choice == 1) {
+                int count;
+
+                if (!readIntWithPrompt(count, "  Count: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = Factorials(count);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 2) {
+                int count;
+
+                if (!readIntWithPrompt(count, "  Count: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                Sequence<int>* result = nullptr;
+
+                try {
+                    result = Fibonacci(count);
+                    printIntSequence(result);
+                    delete result;
+                }
+                catch (...) {
+                    delete result;
+                    throw;
+                }
+            }
+            else if (choice == 3) {
+                int order;
+                int count;
+
+                if (!readIntWithPrompt(order, "  Order: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                if (order <= 0) {
+                    printError("Order must be positive");
+                    continue;
+                }
+
+                if (!readIntWithPrompt(count, "  Count: ")) {
+                    handleInputError();
+                    continue;
+                }
+
+                int* coeffData = nullptr;
+                int* initData = nullptr;
+                MutableArraySequence<int>* coefficients = nullptr;
+                MutableArraySequence<int>* initialValues = nullptr;
+                Sequence<int>* result = nullptr;
+
+                try {
+                    coeffData = new int[order];
+                    initData = new int[order];
+
+                    std::cout << "  Enter coefficients [a1, a2, ..., ak]:\n";
+                    for (int i = 0; i < order; ++i) {
+                        std::string prompt = "  a" + std::to_string(i + 1) + ": ";
+
+                        while (!readIntWithPrompt(coeffData[i], prompt)) {
+                            handleInputError();
+                        }
+                    }
+
+                    std::cout << "  Enter initial values [x0, x1, ..., x(k-1)]:\n";
+                    for (int i = 0; i < order; ++i) {
+                        std::string prompt = "  x" + std::to_string(i) + ": ";
+
+                        while (!readIntWithPrompt(initData[i], prompt)) {
+                            handleInputError();
+                        }
+                    }
+
+                    coefficients = new MutableArraySequence<int>(coeffData, order);
+                    initialValues = new MutableArraySequence<int>(initData, order);
+
+                    result = LinearRecurrence(coefficients, initialValues, count);
+
+                    printIntSequence(result);
+
+                    delete[] coeffData;
+                    delete[] initData;
+                    delete coefficients;
+                    delete initialValues;
+                    delete result;
+                }
+                catch (...) {
+                    delete[] coeffData;
+                    delete[] initData;
+                    delete coefficients;
+                    delete initialValues;
+                    delete result;
+                    throw;
+                }
+            }
+        }
+        catch (const std::exception& e) {
+            printError(e.what());
+        }
+    }
+}
+
 int main() {
     int choice;
     while (true) {
@@ -1260,9 +1393,10 @@ int main() {
         std::cout << "  3. Hanoi Tower\n";
         std::cout << "  4. Matrices\n";
         std::cout << "  5. Natural Number Algorithms\n";
+        std::cout << "  6. Recurrence Algorithms\n";
         std::cout << "  0. Exit\n";
 
-        if (!readIntInRange(choice, "Choice: ", 1, 5)) {
+        if (!readIntInRange(choice, "Choice: ", 1, 6)) {
             std::cout << "  Goodbye.\n";
             return 0;
         }
@@ -1273,6 +1407,7 @@ int main() {
         case 3: hanoiMenu(); break;
         case 4: matrixMenu(); break;
         case 5: naturalNumberAlgorithmsMenu(); break;
+        case 6: recurrenceAlgorithmsMenu(); break;
         }
     }
 }
