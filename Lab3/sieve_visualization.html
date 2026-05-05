@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sieve of Eratosthenes Visualization</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 8px 14px; margin-right: 8px; }
+        .cell { fill: white; stroke: #333; stroke-width: 1; }
+        .number { font-size: 14px; text-anchor: middle; dominant-baseline: middle; }
+        .active { fill: #ffe08a; }
+        .prime { fill: #9be7a1; }
+        .crossed { fill: #ddd; }
+        .cross-line { stroke: #c0392b; stroke-width: 3; }
+    </style>
+</head>
+<body>
+    <h2>Sieve of Eratosthenes, n = 300</h2>
+    <p id="info">Press Start to begin.</p>
+    <button onclick="startAnimation()">Start</button>
+    <button onclick="resetAnimation()">Reset</button>
+    <br><br>
+    <svg id="sieve"></svg>
+    <script>
+        const high = 300;
+        const cols = 10;
+        const cellW = 70;
+        const cellH = 50;
+        const startX = 20;
+        const startY = 20;
+        const svg = document.getElementById('sieve');
+        const info = document.getElementById('info');
+        const count = high - 1;
+        const rows = Math.ceil(count / cols);
+        const svgWidth = startX * 2 + cols * cellW;
+        const svgHeight = startY * 2 + rows * cellH;
+        svg.setAttribute('width', svgWidth);
+        svg.setAttribute('height', svgHeight);
+        svg.setAttribute('viewBox', '0 0 ' + svgWidth + ' ' + svgHeight);
+        const steps = [
+            { prime: 2, crossed: [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190, 192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222, 224, 226, 228, 230, 232, 234, 236, 238, 240, 242, 244, 246, 248, 250, 252, 254, 256, 258, 260, 262, 264, 266, 268, 270, 272, 274, 276, 278, 280, 282, 284, 286, 288, 290, 292, 294, 296, 298, 300] },
+            { prime: 3, crossed: [9, 15, 21, 27, 33, 39, 45, 51, 57, 63, 69, 75, 81, 87, 93, 99, 105, 111, 117, 123, 129, 135, 141, 147, 153, 159, 165, 171, 177, 183, 189, 195, 201, 207, 213, 219, 225, 231, 237, 243, 249, 255, 261, 267, 273, 279, 285, 291, 297] },
+            { prime: 5, crossed: [25, 35, 55, 65, 85, 95, 115, 125, 145, 155, 175, 185, 205, 215, 235, 245, 265, 275, 295] },
+            { prime: 7, crossed: [49, 77, 91, 119, 133, 161, 203, 217, 259, 287] },
+            { prime: 11, crossed: [121, 143, 187, 209, 253] },
+            { prime: 13, crossed: [169, 221, 247, 299] },
+            { prime: 17, crossed: [289] }
+        ];
+
+        function cellId(n) {
+            return 'cell-' + n;
+        }
+
+        function textId(n) {
+            return 'text-' + n;
+        }
+
+        function lineId(n) {
+            return 'line-' + n;
+        }
+
+        function getPosition(n) {
+            const index = n - 2;
+            const row = Math.floor(index / cols);
+            const col = index % cols;
+
+            return {
+                x: startX + col * cellW,
+                y: startY + row * cellH
+            };
+        }
+
+        function createSvgElement(name) {
+            return document.createElementNS('http://www.w3.org/2000/svg', name);
+        }
+
+        function drawGrid() {
+            svg.innerHTML = '';
+
+            for (let n = 2; n <= high; ++n) {
+                const pos = getPosition(n);
+
+                const rect = createSvgElement('rect');
+                rect.setAttribute('id', cellId(n));
+                rect.setAttribute('class', 'cell');
+                rect.setAttribute('x', pos.x);
+                rect.setAttribute('y', pos.y);
+                rect.setAttribute('width', 55);
+                rect.setAttribute('height', 35);
+                rect.setAttribute('rx', 6);
+
+                const text = createSvgElement('text');
+                text.setAttribute('id', textId(n));
+                text.setAttribute('class', 'number');
+                text.setAttribute('x', pos.x + 27.5);
+                text.setAttribute('y', pos.y + 18);
+                text.textContent = n;
+
+                svg.appendChild(rect);
+                svg.appendChild(text);
+            }
+        }
+
+        function markActive(n) {
+            const cell = document.getElementById(cellId(n));
+            if (cell) {
+                cell.setAttribute('class', 'cell active');
+            }
+        }
+
+        function markPrime(n) {
+            const cell = document.getElementById(cellId(n));
+            if (cell) {
+                cell.setAttribute('class', 'cell prime');
+            }
+        }
+
+        function crossNumber(n) {
+            const cell = document.getElementById(cellId(n));
+            if (cell) {
+                cell.setAttribute('class', 'cell crossed');
+            }
+
+            if (document.getElementById(lineId(n))) {
+                return;
+            }
+
+            const pos = getPosition(n);
+
+            const line = createSvgElement('line');
+            line.setAttribute('id', lineId(n));
+            line.setAttribute('class', 'cross-line');
+            line.setAttribute('x1', pos.x + 8);
+            line.setAttribute('y1', pos.y + 28);
+            line.setAttribute('x2', pos.x + 47);
+            line.setAttribute('y2', pos.y + 7);
+
+            svg.appendChild(line);
+        }
+
+        function resetAnimation() {
+            drawGrid();
+            info.textContent = 'Press Start to begin.';
+        }
+
+        function startAnimation() {
+            resetAnimation();
+
+            let stepIndex = 0;
+
+            function runStep() {
+                if (stepIndex >= steps.length) {
+                    for (let n = 2; n <= high; ++n) {
+                        const cell = document.getElementById(cellId(n));
+                        const hasLine = document.getElementById(lineId(n));
+
+                        if (cell && !hasLine) {
+                            cell.setAttribute('class', 'cell prime');
+                        }
+                    }
+
+                    info.textContent = 'Done. Green cells are prime numbers.';
+                    return;
+                }
+
+                const step = steps[stepIndex];
+                info.textContent = 'Prime = ' + step.prime + ', crossing out: [' + step.crossed.join(', ') + ']';
+
+                markActive(step.prime);
+
+                let i = 0;
+
+                function crossNext() {
+                    if (i >= step.crossed.length) {
+                        markPrime(step.prime);
+                        ++stepIndex;
+                        setTimeout(runStep, 700);
+                        return;
+                    }
+
+                    crossNumber(step.crossed[i]);
+                    ++i;
+                    setTimeout(crossNext, 250);
+                }
+
+                crossNext();
+            }
+
+            runStep();
+        }
+
+        drawGrid();
+    </script>
+</body>
+</html>

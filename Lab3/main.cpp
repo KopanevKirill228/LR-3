@@ -11,6 +11,7 @@
 #include "SparseMatrix.h"
 #include "NaturalNumberAlgorithms.h"
 #include "RecurrenceAlgorithms.h"
+#include "SieveVisualizer.h"
 
 static void clearInput() {
     std::cin.clear();
@@ -1383,6 +1384,25 @@ static void recurrenceAlgorithmsMenu() {
     }
 }
 
+static void sieveVisualizationMenu() {
+    int high;
+
+    if (!readIntWithPrompt(high, "  High value for visualization: ")) {
+        handleInputError();
+        return;
+    }
+
+    try {
+        WriteSieveVisualizationHtml(high, "sieve_visualization.html");
+
+        std::cout << "  File created: sieve_visualization.html\n";
+        std::cout << "  Open it in a browser to see SVG animation.\n";
+    }
+    catch (const std::exception& e) {
+        printError(e.what());
+    }
+}
+
 int main() {
     int choice;
     while (true) {
@@ -1394,9 +1414,10 @@ int main() {
         std::cout << "  4. Matrices\n";
         std::cout << "  5. Natural Number Algorithms\n";
         std::cout << "  6. Recurrence Algorithms\n";
+        std::cout << "  7. Generate Sieve SVG/HTML visualization\n";
         std::cout << "  0. Exit\n";
 
-        if (!readIntInRange(choice, "Choice: ", 1, 6)) {
+        if (!readIntInRange(choice, "Choice: ", 1, 7)) {
             std::cout << "  Goodbye.\n";
             return 0;
         }
@@ -1408,6 +1429,7 @@ int main() {
         case 4: matrixMenu(); break;
         case 5: naturalNumberAlgorithmsMenu(); break;
         case 6: recurrenceAlgorithmsMenu(); break;
+        case 7: sieveVisualizationMenu(); break;
         }
     }
 }
